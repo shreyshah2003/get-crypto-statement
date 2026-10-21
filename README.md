@@ -1,1 +1,17 @@
-# Get your Crypto statement on-the-go 🚀
+# Crypto Passport
+
+A local-first, transaction-first MVP for organizing evidence behind fiat deposits, crypto deposits and cash-outs.
+
+## Start
+
+Requires Node.js 22 or later. From the repository root:
+
+```sh
+npm start
+```
+
+Open http://127.0.0.1:5173. No dependencies or installation step is required. Run `npm test` and `npm run check` to validate the app.
+
+See [MVP guide](docs/MVP.md) for the workflow, CSV format, BTC/EVM structures, privacy model, limitations and acceptance checklist.
+
+No Lovable usage, paid integrations or deployment is configured. All transaction details and files remain in browser memory; closing or refreshing loses the session. JSON and print/PDF exports contain entered data, but do not embed originals. This MVP organizes user-supplied evidence and does not independently extract, authenticate or verify it.
