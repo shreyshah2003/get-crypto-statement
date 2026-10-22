@@ -26,6 +26,10 @@
 | Keyboard smoke check | Tab from case title focused amount |
 | Desktop chronological report | Visually inspected; limitations and unresolved gaps retained |
 
+## Acceptance follow-up — 22 October 2026
+
+A fresh browser pass exercised the eight-record synthetic cash-out through review, rejected linking without explanation, manual bank linking, and edit-driven review/link reset. A separately entered fictional fiat deposit linked a reviewed receipt while source remained missing. Changing 50000 USD to 50001 blocked JSON export before transaction save; saving cleared the prior link and rejected the amount match. The downloaded JSON retained transaction 50001 versus evidence 50000, reviewed/unlinked status, candidate false, both bank/source gaps and no original bytes. No application defect was found in these checks. No application code changed; prior automated and direct-PDF validation results remain applicable. The two restricted manual checks below were not repeated or represented as passed. See [the acceptance checklist](ACCEPTANCE.md) for exact steps and required results.
+
 ## Remaining manual verification
 
 - Opening the PDF original's blob URL was rejected by the browser tool's security policy. No bypass or alternate surface was attempted. A person must check original viewing in a normal local browser.
