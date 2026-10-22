@@ -2,7 +2,7 @@
 
 ## Automated
 
-`npm test`: 21 tests pass. Coverage includes exact decimals; quoted/BOM/multiline CSV; bad dates, duplicate headers and precision limits; BTC/EVM hashes; precise BTC/EVM structures; cross-asset/amount/date/hash exclusions; role gaps; report omission of originals; save/reopen metadata round trips; imported trust reset; original reattachment requirements; hostile text as data; unsupported and oversized case files. `npm run check` passes for every app module.
+`npm test`: 34 tests pass. Coverage includes exact decimals; quoted/BOM/multiline CSV; bad dates, duplicate headers and precision limits; BTC/EVM hashes; precise BTC/EVM structures; cross-asset/amount/date/hash exclusions; role gaps; report omission of originals; save/reopen metadata round trips; imported trust reset; original reattachment requirements; hostile text as data; unsupported and oversized case files. `npm run check` passes for every app module.
 
 ## Browser checks with fictional data
 
@@ -43,6 +43,24 @@ Browser checks used the publicly known historical transaction `4a5e1e4baab89f3a3
 The **Download report PDF** path was exercised in the browser using the fictional case plus the clearly labelled unrelated public reference. The final four-page file was parsed with pypdf, all pages had 595 × 842 point dimensions and one embedded page image each, and every page was rendered with Poppler and visually inspected. Page numbers, full BTC source URL/hash/script wrapping, section/evidence grouping, unresolved gaps, Unicode `café`, `₹`, and `日本語`, and final transaction details were checked. No clipped or overlapping text was observed. The PDF is image-based and untagged: use report JSON for search, copyable data and machine processing. The optional system-print dialog remains outside this verified download path.
 
 Provider documentation: [mempool.space REST API](https://mempool.space/docs/api/rest), [Esplora API](https://github.com/Blockstream/esplora/blob/master/API.md). The live response is a provider report; ownership, spendability, inclusion proofs and source of funds were not verified.
+
+## Ethereum mainnet ingestion checks
+
+The 34-test suite includes native and ERC-20-shaped event normalization; exact uint256 units and 0–255 token decimals; chain/hash/receipt/block/log consistency; pending, failed, missing-receipt and unavailable-status behavior; NFT exclusion; unknown metadata; execution/blob fees and legacy paid-price fallback; contract creation; imported snapshot reconstruction and trust reset; chain/contract-aware matching; consent enforcement; fixed read-only RPC methods; malformed/oversized/rate-limited responses; and retained PDF report blocks. Tests do not establish token authenticity, consensus, ownership or finality.
+
+Browser tests used only unrelated public transaction references through explicitly approved dRPC requests:
+
+- Native transfer: `0xc41809233598537383592b3ef7928c736070d2366bd1bf0ef4b74c21743707ca` returned 261209063614970 wei, displayed exactly as 0.00026120906361497 ETH, with execution fee 25677103242000 wei.
+- Token events: `0x724136cbce3df935e56ca570dc4ad8ff2bbd4b5b47558979f45bdb7b19344ee5` returned native value and two eligible events. Explicitly selecting log 150 retained contract `0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48`, raw amount 458423805, provider decimals 6 and exact scaled amount 458.423805. The ticker remained the manual label TOKEN. Execution fee was 183232725083577 wei.
+- Status-only: the historical transaction `0x85d995eba9763907fdf35cd2034144dd9d53ce32cbec21349d4b12823c6860c5` had no eligible positive transfer. Only a status record was available, with no completed amount claimed.
+
+Adding without a selection was rejected. Selected records were unreviewed/unlinked, left the fictional cash-out unchanged and closed no gaps. Editing notes preserved the snapshot. The fixed network was Ethereum mainnet, chain ID 1. No wallet, signing or broadcast operation was used.
+
+The committed `examples/ethereum-synthetic.case.json` is clearly labelled fabricated offline test data. Reopening preserved native/token raw units, fees, status and unknown decimals, labelled acquisition `case-file-unverified`, and reset review/links. In the browser, reviewing its token record produced an exact candidate; changing the case token contract rejected that candidate even when amount/date/hash agreed. Restoring the contract and returning the record to unreviewed left every gap open. The downloaded three-record case JSON retained selected records, decimal metadata and exact fees, with no original bytes.
+
+The app exported a four-page PDF from fabricated token, failed-transaction and unknown-decimal examples. pypdf confirmed four 595 × 842 point pages with one page image each. All four pages were rendered with Poppler and visually inspected: source/time/acquisition, contract/hash wrapping, raw units, known decimals, unknown-scaled-amount wording, failed status without a completed amount, exact fees, page numbers and unresolved gaps were retained without clipping or overlap. This validates the direct download path; the original-view/native-print manual checks above remain open.
+
+Primary references: [Ethereum JSON-RPC](https://ethereum.org/developers/docs/apis/json-rpc/), [ERC-20](https://eips.ethereum.org/EIPS/eip-20), [block-hash RPC parameters](https://eips.ethereum.org/EIPS/eip-1898), [blob fee fields](https://eips.ethereum.org/EIPS/eip-4844), and [dRPC Ethereum endpoint](https://drpc.org/docs/ethereum-api).
 
 ## Walkthrough assessment
 

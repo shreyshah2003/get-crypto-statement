@@ -27,6 +27,7 @@
         <label>Network<select name="network"><option value="none">Off-chain / fiat</option><option value="BTC">Bitcoin</option><option value="EVM">EVM</option></select></label>
         <label>Transaction ID / hash<input name="txid" maxlength="66"></label>
         <label id="chain-id-label" hidden>EVM chain ID<input name="chainId" placeholder="1"></label>
+        <label id="token-contract-label" hidden>EVM token contract (blank for native ETH)<input name="tokenContract" maxlength="42" placeholder="0x…"></label>
         <label class="wide">Source narrative<textarea name="narrative" maxlength="4000" placeholder="Explain how the funds were obtained, including any conversion or intermediary."></textarea></label>
       </div>
       <fieldset id="chain-details" hidden>
@@ -58,6 +59,15 @@
       <p id="btc-status" role="status"></p><div id="btc-result"></div>
     </fieldset>
     <p>Add bank or exchange CSV records, screenshots, or manual evidence. Review each original and enter only what it supports. Editing a record clears its review and link.</p>
+    <fieldset id="evm-lookup">
+      <legend>Retrieve an Ethereum transaction</legend>
+      <label>Lookup network<select id="evm-lookup-chain"><option value="1">Ethereum mainnet — chain ID 1</option></select></label>
+      <label>Ethereum transaction hash to retrieve<input id="evm-lookup-id" maxlength="66" autocomplete="off"></label>
+      <label><input id="evm-consent" type="checkbox"> I approve sending this hash, related contract/block identifiers and my IP metadata to dRPC.</label>
+      <p class="hint">Read-only JSON-RPC calls retrieve the transaction, receipt, block and optional token decimals. No wallet connection, signing, document upload or automatic refresh. Only Ethereum mainnet is supported. Internal transfers/traces, token authenticity and ownership are not verified.</p>
+      <button id="evm-fetch" type="button">Fetch from dRPC</button>
+      <p id="evm-status" role="status"></p><div id="evm-result"></div>
+    </fieldset>
     <label>CSV source<select id="csv-role"><option value="bank">Bank record</option><option value="exchange">Exchange record</option></select></label>
     <label>Import CSV (up to 2 MB, 5,000 rows)<input id="csv" type="file" accept=".csv,text/csv"></label>
     <p class="hint">Headers: date, amount, asset. Optional: reference, txid. Positive amounts; explain direction, fees and conversions in notes.</p>

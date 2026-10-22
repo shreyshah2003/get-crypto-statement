@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.mjs",
     "test": "node --test",
-    "check": "node --check app.js && node --check core.js && node --check casefile.js && node --check demo.js && node --check btc.js && node --check pdf.js && node --check pdf-container.js && node --check server.mjs"
+    "check": "node --check app.js && node --check core.js && node --check casefile.js && node --check demo.js && node --check btc.js && node --check evm.js && node --check amount.js && node --check pdf.js && node --check pdf-container.js && node --check server.mjs"
   },
   "engines": {
     "node": ">=22"

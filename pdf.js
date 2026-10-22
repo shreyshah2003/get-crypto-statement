@@ -27,6 +27,19 @@ export function reportBlocks(r) {
       for(const o of b.outputs)add(`Output ${o.index}: ${o.satoshis} satoshis | ${o.address || 'no address'} | ${o.scriptType} | Script: ${o.script}`);
       for(const limitation of b.limitations)add(limitation);
     }
+    if(e.evm){
+      const s=e.evm;
+      add('Ethereum provider snapshot',true);
+      add(`Source: ${s.sourceUrl} | Retrieved: ${s.retrievedAt} | Acquisition: ${s.acquisition}`);
+      add(`Network: ${s.network}, chain ${s.chainId} | Status: ${s.state} | Confirmations: ${s.confirmations ?? 'unavailable'} | Canonical block check: ${s.canonicalChecked}`);
+      add(`Transaction: ${s.transaction.hash} | From: ${s.transaction.from} | To: ${s.transaction.to ?? 'contract creation'} | Attempted top-level value: ${s.transaction.valueWei} wei`);
+      add(`Block: ${s.block?.number ?? 'none'} | Hash: ${s.block?.hash ?? 'none'} | Block time: ${s.block?new Date(Number(s.block.timestamp)*1000).toISOString():'unavailable'}`);
+      add(`Execution fee: ${s.fees.executionWei ?? 'unknown'} wei | Blob fee: ${s.fees.blobWei ?? 'unknown'} wei | Total: ${s.fees.totalWei ?? 'incomplete/unknown'} wei`);
+      add(`Selected record: ${e.selectedTransfer}. ${e.selectedTransfer==='status'?'No completed transfer claimed.':''}`);
+      for(const transfer of s.transfers)add(`${transfer.id} (${transfer.kind}): ${transfer.rawAmount} raw units | Decimals ${transfer.decimals ?? 'unknown'} | Scaled amount ${transfer.amount ?? 'not inferred'} | Contract ${transfer.contract || 'native ETH'} | ${transfer.from} → ${transfer.to}`);
+      add(`Receipt logs retained in report JSON: ${s.receipt?.logs.length ?? 0}. NFT/ERC-1155 and internal transfers are not decoded.`);
+      for(const limitation of s.limitations)add(limitation);
+    }
   }
   const {title,narrative,kind,amount,asset,date,...networkDetails}=r.transaction;
   add('Transaction network details - user supplied',true);add(JSON.stringify(networkDetails,null,2));

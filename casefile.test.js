@@ -50,5 +50,5 @@ test('CSV import preserves hostile text as data and rejects duplicate headers an
   assert.equal(r[0].reference,'<img src=x onerror=alert(1)>');
   assert.throws(()=>parseCSV('date,amount,asset,asset\n2026-10-21,1,USD,USD'));
   assert.throws(()=>parseCSV('date,amount,asset\n2026-10-21,1,"USD"junk'));
-  assert.throws(()=>parseCSV('date,amount,asset\n2026-10-21,0.0000000000000000001,BTC'));
+  assert.throws(()=>parseCSV('date,amount,asset\n2026-10-21,0.'+'0'.repeat(255)+'1,BTC'));
 });

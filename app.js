@@ -3,10 +3,12 @@ import {cleanTransaction, cleanEvidence, saveCase, openCase, validateStructure} 
 import {demoCase} from './demo.js';
 import {fetchBTC,btcEvidence,btcAmount} from './btc.js';
 import {createReportPDF} from './pdf.js';
+import {fetchEVM,evmEvidence} from './evm.js';
 
 let transaction = null, evidence = [], editingId = null;
 let transactionDirty = false, evidenceDirty = false;
 let pendingBTC=null, lookupGeneration=0;
+let pendingEVM=null,evmGeneration=0;
 const $ = id => document.getElementById(id);
 const form = $('case-form'), evidenceForm = $('evidence-form');
 const fields = ['label','role','amount','asset','date','txid','notes'];
@@ -55,6 +57,7 @@ function networkUI() {
   const network = form.elements.network.value;
   $('chain-details').hidden = network === 'none';
   $('chain-id-label').hidden = network !== 'EVM';
+  $('token-contract-label').hidden = network !== 'EVM';
   $('btc-details').hidden = network !== 'BTC' || !$('include-details').checked;
   $('evm-details').hidden = network !== 'EVM' || !$('include-details').checked;
 }
@@ -108,7 +111,7 @@ evidenceForm.onsubmit = event => {
     const raw = data(evidenceForm), file = raw.attachment;
     const old = evidence.find(e => e.id === editingId);
     if (!old && evidence.length >= 5000) throw Error('Limit a case to 5,000 evidence records.');
-    const cleaned = cleanEvidence({...raw, amount:raw.amount.trim(), asset:raw.asset.trim().toUpperCase(), txid:raw.txid.trim(),blockchain:old?.blockchain,selectedOutput:old?.selectedOutput});
+    const cleaned = cleanEvidence({...raw, amount:raw.amount.trim(), asset:raw.asset.trim().toUpperCase(), txid:raw.txid.trim(),blockchain:old?.blockchain,selectedOutput:old?.selectedOutput,evm:old?.evm,selectedTransfer:old?.selectedTransfer});
     const next = {...old, ...cleaned, id:old?.id || crypto.randomUUID(), provenance:old?.provenance || 'Manual entry', review:'unreviewed', linked:false, linkReason:''};
     if (file.size) {
       if (file.size > 10 * 1024 * 1024) throw Error('Attachment exceeds 10 MB.');
@@ -139,6 +142,7 @@ function render() {
     if (e.notes) box.append(el('p',e.notes));
     if (e.txid) box.append(el('p',e.txid));
     if (e.blockchain) appendSnapshot(box,e.blockchain,e.selectedOutput);
+    if(e.evm)appendEVMSnapshot(box,e.evm,e.selectedTransfer);
     if (e.originalRequired) box.append(el('p',`Original missing: ${e.fileName}. Edit this record to reattach before review.`, 'warning'));
     if (e.file) {
       if (e.file.type.startsWith('image/')) { const img = el('img'); img.src = e.preview; img.alt = e.fileName; box.append(img); }
@@ -180,6 +184,7 @@ function preview() {
     target.append(el('h4',e.label), el('p',`ID: ${e.id} · ${e.role} · ${e.review} · ${e.linked?'Linked':'Unlinked'} · ${e.provenance}`), el('p',`${e.amount || 'No amount'} ${e.asset || ''} · ${e.date || 'No date'}`), el('p',e.notes || 'No notes'), el('p',e.linkReason || 'No link rationale'), el('p',e.match.reasons.join('; ')));
     if (e.txid) target.append(el('p',`Transaction ID: ${e.txid}`));
     if (e.blockchain) appendSnapshot(target,e.blockchain,e.selectedOutput);
+    if(e.evm)appendEVMSnapshot(target,e.evm,e.selectedTransfer);
     if (e.fileName) target.append(el('p',`Source file: ${e.fileName}${e.originalRequired?' — original missing':' — original bytes not included in report'}`));
   }
   target.append(el('h3','Transaction structure (user supplied)'), el('pre',JSON.stringify(transaction,null,2)));
@@ -196,6 +201,41 @@ function appendSnapshot(parent,b,selected) {
   parent.append(el('h4','Bitcoin provider snapshot'),el('p',`Source: ${b.sourceUrl} | Retrieved ${b.retrievedAt} | ${b.acquisition}`),el('p',`Fee ${b.feeSatoshis} satoshis | ${s.confirmed?'Provider reports confirmed':'Unconfirmed'} | Confirmations at snapshot: ${s.confirmations ?? 'unavailable'}`),el('p',`Selected output ${selected}: ${btcAmount(b.outputs[selected].satoshis)} BTC to ${b.outputs[selected].address || '(no address)'}. Entered fields may differ after manual edits; the snapshot stays unchanged.`));
   const details=el('details');details.append(el('summary','All inputs, outputs and snapshot limitations'),el('pre',JSON.stringify(b,null,2)));parent.append(details);
 }
+function appendEVMSnapshot(parent,s,selected){
+  const transfer=s.transfers.find(t=>t.id===selected);
+  parent.append(el('h4','Ethereum provider snapshot'),el('p',`Source: ${s.sourceUrl} | Retrieved ${s.retrievedAt} | ${s.acquisition}`),el('p',`Ethereum mainnet (chain ${s.chainId}) | ${s.state} | Confirmations at snapshot: ${s.confirmations ?? 'unavailable'} | Canonical block check: ${s.canonicalChecked?'provider agrees':'unavailable'}`),el('p',`Execution fee: ${s.fees.executionWei ?? 'unknown'} wei | Blob fee: ${s.fees.blobWei ?? 'unknown'} wei | Total fee: ${s.fees.totalWei ?? 'unknown / incomplete'} wei`));
+  parent.append(el('p',transfer?`Selected ${transfer.id}: ${transfer.rawAmount} raw units | Decimals ${transfer.decimals ?? 'unknown'} | Contract ${transfer.contract || 'native ETH'} | ${transfer.from} → ${transfer.to}. Entered fields may differ; the snapshot stays unchanged.`:'Status-only record. No completed transfer is claimed.'));
+  const details=el('details');details.append(el('summary','Transaction, receipt logs, transfers and limitations'),el('pre',JSON.stringify(s,null,2)));parent.append(details);
+}
+function clearEVMLookup(){pendingEVM=null;evmGeneration++;$('evm-consent').checked=false;$('evm-result').replaceChildren();}
+$('evm-lookup-id').oninput=clearEVMLookup;
+$('evm-lookup-chain').onchange=clearEVMLookup;
+$('evm-fetch').onclick=async()=>{
+  const generation=++evmGeneration,id=$('evm-lookup-id').value.trim();
+  pendingEVM=null;$('evm-result').replaceChildren();$('evm-fetch').disabled=true;status('evm-status','Retrieving Ethereum provider snapshot…');
+  try{
+    if($('evm-lookup-chain').value!=='1')throw Error('Only Ethereum mainnet is supported for lookup.');
+    const snapshot=await fetchEVM(id,{consent:$('evm-consent').checked});
+    if(generation!==evmGeneration)return;pendingEVM=snapshot;
+    const result=$('evm-result');
+    result.append(el('p',`Provider status: ${snapshot.state}. ${snapshot.transfers.length} supported top-level/native or ERC-20-shaped transfers. Total fee ${snapshot.fees.totalWei ?? 'unavailable/incomplete'} wei. No ownership or token-authenticity claim.`));
+    const label=el('label','Transfer or status record to explain'),select=el('select');select.id='evm-transfer';
+    const empty=el('option','Choose explicitly');empty.value='';select.append(empty);
+    const statusOption=el('option',`Status only — ${snapshot.state}, no completed amount claimed`);statusOption.value='status';select.append(statusOption);
+    for(const transfer of snapshot.transfers){
+      const option=el('option',`${transfer.id}: ${transfer.amount ?? transfer.rawAmount+' raw (decimals unknown)'} ${transfer.kind==='native'?'ETH':'token '+transfer.contract} → ${transfer.to}`);
+      option.value=transfer.id;option.disabled=BigInt(transfer.rawAmount)===0n;select.append(option);
+    }
+    label.append(select);result.append(label);
+    action(result,'Add selected Ethereum evidence',()=>{
+      try{if(!pendingEVM||!select.value)throw Error('Select a transfer or status record first.');if(evidence.length>=5000)throw Error('Limit a case to 5,000 evidence records.');evidence.push({...evmEvidence(pendingEVM,select.value),id:crypto.randomUUID()});status('evm-status','Added as unreviewed evidence. Token ticker labels are manual; chain and contract identify the asset. The case transaction is unchanged.');render();}
+      catch(e){status('evm-status',e.message);}
+    });
+    const details=el('details');details.append(el('summary','Inspect full Ethereum provider snapshot'),el('pre',JSON.stringify(snapshot,null,2)));result.append(details);
+    status('evm-status',`Snapshot retrieved ${snapshot.retrievedAt}. Canonical block: ${snapshot.canonicalChecked?'provider agrees':'unavailable'}. Unknown decimals/fees remain unknown. Review before linking.`);
+  }catch(e){if(generation===evmGeneration)status('evm-status',e.message);}
+  finally{$('evm-fetch').disabled=false;}
+};
 $('btc-lookup-id').oninput=()=>{pendingBTC=null;lookupGeneration++;$('btc-consent').checked=false;$('btc-result').replaceChildren();};
 $('btc-fetch').onclick=async()=>{
   const generation=++lookupGeneration,id=$('btc-lookup-id').value.trim();
@@ -225,7 +265,7 @@ $('btc-fetch').onclick=async()=>{
 };
 function load(value) {
   transaction=value.transaction; evidence=value.evidence; transactionDirty=false;
-  for (const key of ['kind','title','amount','asset','date','network','txid','chainId','narrative']) form.elements[key].value=transaction[key] || '';
+  for (const key of ['kind','title','amount','asset','date','network','txid','chainId','tokenContract','narrative']) form.elements[key].value=transaction[key] || '';
   for (const id of ['btc-inputs','btc-outputs','evm-tokens']) $(id).replaceChildren();
   const x=transaction.structure; $('include-details').checked=Boolean(x);
   if (x && transaction.network==='BTC') { for (const i of x.inputs) row('btc-inputs',inputSpecs,i); for (const o of x.outputs) row('btc-outputs',outputSpecs,o); }
@@ -251,6 +291,7 @@ $('reset').onclick=() => {
   for (const e of evidence) if (e.preview) URL.revokeObjectURL(e.preview);
   transaction=null; evidence=[]; transactionDirty=false; form.reset(); cancelEdit();
   pendingBTC=null;lookupGeneration++;$('btc-result').replaceChildren();$('btc-lookup-id').value='';$('btc-consent').checked=false;status('btc-status','');
+  clearEVMLookup();$('evm-lookup-id').value='';status('evm-status','');
   for (const id of ['btc-inputs','btc-outputs','evm-tokens']) $(id).replaceChildren();
   for (const id of ['session-status','case-status','evidence-status']) status(id,'');
   networkUI(); render();
