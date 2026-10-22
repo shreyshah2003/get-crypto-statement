@@ -1,25 +1,38 @@
-# Crypto Passport MVP
+# Crypto Passport MVP guide
 
-Transaction-first evidence organizer for fiat deposits, crypto deposits and cash-outs. No paid services, runtime dependencies, uploads, external API calls, automatic OCR or verification.
+## Run
 
-## Run locally
-
-Requires Node.js 22+. Run `npm start` in this directory, then open http://127.0.0.1:5173. Run `npm test` and `npm run check` for validation. The server binds only to the local computer.
+Node.js 22+: `npm start`, then open http://127.0.0.1:5173. There are no runtime packages to install. `npm test` runs the deterministic core and case-file tests; `npm run check` checks all application modules. The server binds only to 127.0.0.1 and serves an explicit asset allowlist.
 
 ## Workflow
 
-1. Enter the transaction, source narrative and optional BTC or EVM structure. BTC inputs reference previous transaction output indices; outputs use integer satoshi strings. EVM uses a chain ID, transaction hash, from/to addresses and integer wei strings; optional token transfers include contract/from/to, rawAmount string and integer decimals. These are user supplied structures, not chain lookups or proof of validity.
-2. Import canonical bank/exchange CSV (`date,amount,asset,reference,txid`; last two optional). ISO dates and positive unsigned amounts only; normalize debit signs before import and document direction in notes. Each row remains unreviewed. No exchange-specific format inference.
-3. Add screenshots/PDF evidence with manual transcription, or manual source/ownership records. Open originals, review fields, then mark reviewed. Remove and re-enter a record to correct it.
-4. Matching suggests reviewed rows with an exact decimal amount and asset within three calendar days. Conflicting hashes reject candidates. No inferred FX, fees, splitting, aggregation, ownership or authenticity. Link any reviewed evidence manually with a required explanation, including mismatch reasons. A candidate never links itself. Multiple candidates remain unresolved until manually assessed.
-5. Review the role-based gap checklist and export JSON or print/save PDF. A linked role means reviewed evidence was supplied; it does not certify sufficiency, authenticity, ownership or compliance. Editing a saved transaction clears all links.
+1. Choose fiat deposit, crypto deposit or cash-out, enter the transaction and explain the source. Save it before exporting.
+2. Choose BTC or EVM for chain records. A hash is required for these networks. Optional guided details support multiple BTC previous-output references and recipient outputs, or EVM native transfers and token transfers. BTC values are whole satoshi strings; EVM values are whole wei/raw-token strings. These preserve exact integers. Addresses, hashes and structures are recorded as supplied, not independently authenticated or retrieved.
+3. Add screenshots/PDFs and manual transcription, or import bank/exchange CSV. Every record starts unreviewed. Open the original and compare it with entered fields before marking reviewed. Editing evidence clears its review and link. Existing attachments are retained unless replaced.
+4. Candidate matching requires reviewed evidence, identical asset and exact decimal amount within three calendar days. Conflicting hashes reject candidates. There is no inferred FX, fee adjustment, aggregation, ownership or authenticity. Manually link reviewed records with a written explanation; explicitly explain mismatches. A candidate never links itself. Changing the saved transaction clears prior links and current link explanations.
+5. Review the role checklist and chronological evidence report. A linked role means reviewed evidence was manually attached to the explanation, not that its authenticity or sufficiency was established. Unresolved source, ownership, fees and intermediary questions belong in notes and the source narrative.
+6. Export a report JSON or print/save PDF for sharing. The report includes gaps, reasons, transaction structure, evidence IDs, source filenames and uncertainty. Original bytes are never embedded. Review and redact entered data before sharing.
+
+## Save and reopen
+
+**Save case file** creates a `crypto-passport-case` version 1 JSON file, distinct from the report export. It contains entered fields and prior review/link metadata but no attachment bytes or browser blob URLs. Keep the original files separately and store the case file privately. No encryption is applied to downloaded files.
+
+Use **Reopen saved case** in an empty session. The importer validates and whitelists fields, caps files at 5 MB/5,000 records, and rejects unsupported formats. Review/link flags are never trusted on import: every record becomes unreviewed and unlinked, with the previous rationale retained only for reassessment. Records previously backed by attachments require reattachment before review. Export is blocked while transaction/evidence edits are pending. Reopening a report JSON is intentionally unsupported.
+
+There is no browser persistence or account. Refreshing/closing loses session data. Clear the session before loading another case or the demo to avoid overwriting saved work.
+
+## CSV format
+
+Required headers: `date,amount,asset`. Optional: `reference,txid`. ISO calendar dates (`YYYY-MM-DD`) and positive unsigned decimals with at most 18 fractional digits. Select the CSV source explicitly. Quoted fields, commas, multiline fields, CRLF and a BOM are supported. Invalid dates, duplicate headers, missing columns or malformed rows reject the entire import. Limits: 2 MB/5,000 rows and 5,000 records per case. Normalize debit signs first and document direction in notes. No exchange-specific format inference.
+
+## Synthetic walkthrough
+
+**Load synthetic walkthrough** illustrates savings → bank transfer → exchange purchase → wallet withdrawal → exchange return → sale → bank receipt. All eight records are conspicuously fictional, unreviewed and unlinked. Hashes/addresses are not queried. Cross-asset conversions are expressed in notes, never inferred by matching. The ownership self-declaration is deliberately insufficient, underlying income evidence is absent and fees are unspecified. The report should preserve those limitations even if a reviewer manually links some supporting records. Example case/CSV files are in `examples/`.
 
 ## Privacy and limits
 
-Sensitive case data and files live only in browser memory. There is no account, persistence, analytics or server upload; refreshing/closing loses the session. Export before leaving. Original files are not included in reports. Exports contain entered personal data: review and redact them before sharing. The public repository must never contain customer evidence or real test fixtures. Untrusted text is rendered using textContent rather than HTML. PDF originals open through the browser viewer. CSV import is limited to 2 MB/5,000 rows; attachments to 10 MB each. No authentication or multi-user backend is provided in this local MVP.
+No uploads, telemetry, external API calls, OCR, independent verification, accounts or database. Case data and files live in browser memory. PNG/JPEG/WebP/PDF attachments are limited to 10 MB each. Untrusted text is rendered with textContent; imported JSON is treated as data, never instructions. A self-hosted local server sends a restrictive CSP and does not accept file uploads. Downloads contain personal data entered by the user and must be protected separately. Do not put customer evidence in this public repository.
 
-Future storage integration requires explicit design for authentication, per-user access controls, encryption, retention/deletion and private object storage. Future blockchain ingestion needs explicit provider consent and provenance. Lovable is not invoked. Deployment is intentionally excluded and requires approval.
+No Lovable tools/credits or deployment are configured. Future authentication, private storage, retention/deletion and blockchain provider ingestion require separate implementation. Deployment requires explicit approval. This MVP makes no financial, legal, tax or compliance determination.
 
-## Manual acceptance checks
-
-Exercise each case type; save invalid/valid BTC and EVM hashes; import malformed and quoted CSV; add a screenshot and PDF; review/unreview/link/unlink/remove records; confirm transaction edits clear links; check report preview/JSON/print preserve missing roles and mismatch reasons; clear the session. Enter HTML-like text and confirm it displays literally. Check narrow-screen layout and keyboard focus. Automated tests cover the deterministic core; browser acceptance should be repeated before release.
+See [validation record](VALIDATION.md) for checked behavior and remaining environment-limited checks.

@@ -14,4 +14,6 @@ Open http://127.0.0.1:5173. No dependencies or installation step is required. Ru
 
 See [MVP guide](docs/MVP.md) for the workflow, CSV format, BTC/EVM structures, privacy model, limitations and acceptance checklist.
 
-No Lovable usage, paid integrations or deployment is configured. All transaction details and files remain in browser memory; closing or refreshing loses the session. JSON and print/PDF exports contain entered data, but do not embed originals. This MVP organizes user-supplied evidence and does not independently extract, authenticate or verify it.
+Save/reopen case files, guided BTC/EVM entry, editable evidence and a fictional end-to-end walkthrough are included. Case reopening resets review and links and requires reattachment of missing originals. See the [validation record](docs/VALIDATION.md) for tested behavior and remaining PDF checks.
+
+No Lovable usage, paid integrations or deployment is configured. All transaction details and files remain in browser memory; closing or refreshing loses the session unless a case file was saved. Case/report JSON and print/PDF exports contain entered data, but do not embed originals. This MVP organizes user-supplied evidence and does not independently extract, authenticate or verify it.

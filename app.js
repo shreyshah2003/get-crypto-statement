@@ -1,17 +1,214 @@
-import {validateTransaction,parseCSV,match,checklist,report} from './core.js';
-let transaction=null,evidence=[];const $=id=>document.getElementById(id);const form=$('case-form');
-function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
-function data(f){return Object.fromEntries(new FormData(f).entries());}
-function fail(id,e){$(id).textContent=e.message;}
-function structure(raw,network){if(!raw.trim())return null;const x=JSON.parse(raw);if(!x||typeof x!=='object'||Array.isArray(x))throw Error('Structure must be a JSON object.');if(network==='BTC'){if(!Array.isArray(x.inputs)||!Array.isArray(x.outputs)||!x.inputs.length||!x.outputs.length)throw Error('BTC requires inputs and outputs.');for(const i of x.inputs)if(!/^[a-f0-9]{64}$/i.test(i.txid)||!Number.isSafeInteger(i.vout)||i.vout<0)throw Error('Invalid BTC input outpoint.');for(const o of x.outputs)if(typeof o.address!=='string'||!o.address.trim()||!/^\d+$/.test(o.satoshis))throw Error('BTC outputs need an address and integer satoshis string.');}else if(network==='EVM'){if(!/^0x[a-f0-9]{40}$/i.test(x.from)||!/^0x[a-f0-9]{40}$/i.test(x.to)||!/^\d+$/.test(x.valueWei))throw Error('EVM structure requires from/to addresses and integer valueWei string.');if(x.tokenTransfers!==undefined&&!Array.isArray(x.tokenTransfers))throw Error('tokenTransfers must be an array.');for(const t of x.tokenTransfers||[])if(!/^0x[a-f0-9]{40}$/i.test(t.contract)||!/^0x[a-f0-9]{40}$/i.test(t.from)||!/^0x[a-f0-9]{40}$/i.test(t.to)||!/^\d+$/.test(t.rawAmount)||!Number.isInteger(t.decimals)||t.decimals<0||t.decimals>255)throw Error('Token transfers need contract/from/to, rawAmount string and decimals (0–255).');}else throw Error('Select BTC or EVM for chain structure.');return x;}
-form.addEventListener('submit',event=>{event.preventDefault();try{const t=data(form);t.asset=t.asset.trim().toUpperCase();t.amount=t.amount.trim();t.txid=t.txid.trim();t.structure=structure(t.structure,t.network);validateTransaction(t);if(transaction&&JSON.stringify(transaction)!==JSON.stringify(t)){for(const e of evidence)e.linked=false;}transaction=t;$('case-status').textContent='Transaction saved. Changes clear evidence links so you can reassess them.';render();}catch(e){fail('case-status',e);}});
-$('evidence-form').addEventListener('submit',event=>{event.preventDefault();try{const f=$('evidence-form'),e=data(f),file=e.attachment;delete e.attachment;e.asset=e.asset.trim().toUpperCase();e.amount=e.amount.trim();if(file.size){if(file.size>10*1024*1024)throw Error('Attachment exceeds 10 MB.');if(!['image/png','image/jpeg','image/webp','application/pdf'].includes(file.type))throw Error('Choose PNG, JPEG, WebP or PDF.');e.file=file;e.fileName=file.name;e.preview=URL.createObjectURL(file);}e.id=crypto.randomUUID();e.review='unreviewed';e.provenance='Manual entry';e.linked=false;evidence.push(e);f.reset();$('evidence-status').textContent='Added. Review the original before marking reviewed.';render();}catch(e){fail('evidence-status',e);}});
-$('csv').addEventListener('change',async event=>{try{const file=event.target.files[0];if(!file)return;if(file.size>2_000_000)throw Error('CSV exceeds 2 MB.');const rows=parseCSV(await file.text());const role=$('evidence-form').elements.role.value;if(!['bank','exchange'].includes(role))throw Error('Choose Bank record or Exchange record before CSV import.');evidence.push(...rows.map(row=>({...row,id:crypto.randomUUID(),role,label:row.reference||`${file.name} · row ${row.row}`,fileName:file.name,provenance:`CSV row ${row.row}`,review:'unreviewed',linked:false})));$('evidence-status').textContent=`Imported ${rows.length} unreviewed records. No links were created.`;render();}catch(e){fail('evidence-status',e);}finally{event.target.value='';}});
-function action(parent,label,fn){const b=el('button',label);b.type='button';b.addEventListener('click',fn);parent.append(b);}
-function render(){const records=$('records');records.replaceChildren();for(const e of evidence){const box=el('div',undefined,'record');box.append(el('strong',e.label),el('p',`${e.role} · ${e.provenance} · ${e.review} · ${e.linked?'Linked':'Unlinked'}`),el('p',`${e.date||'Date missing'} · ${e.amount||'Amount missing'} ${e.asset||''}`));if(e.notes)box.append(el('p',e.notes));if(e.txid)box.append(el('p',e.txid));if(e.file){if(e.file.type.startsWith('image/')){const img=el('img');img.src=e.preview;img.alt=e.fileName;box.append(img);}const link=el('a',`Open original: ${e.fileName}`);link.href=e.preview;link.target='_blank';link.rel='noopener';box.append(link);}if(transaction){const m=match(transaction,e);box.append(el('p',`${m.candidate?'Candidate only':'Matching note'}: ${m.reasons.join('; ')}`));}action(box,e.review==='reviewed'?'Return to unreviewed':'I reviewed this record',()=>{e.review=e.review==='reviewed'?'unreviewed':'reviewed';e.linked=false;render();});const rationale=el('textarea');rationale.value=e.linkReason||'';rationale.maxLength=4000;const rationaleLabel=el('label','How does this support the transaction? Include mismatches and uncertainty.');rationaleLabel.append(rationale);box.append(rationaleLabel);action(box,e.linked?'Unlink':'Link to transaction',()=>{if(!transaction)return fail('evidence-status',Error('Save a transaction first.'));if(e.review!=='reviewed')return fail('evidence-status',Error('Review this record first.'));if(!e.linked){const reason=rationale.value;if(!reason.trim())return fail('evidence-status',Error('Enter a link explanation, including any uncertainty.'));e.linkReason=reason.trim();}else delete e.linkReason;e.linked=!e.linked;render();});action(box,'Remove',()=>{if(e.preview)URL.revokeObjectURL(e.preview);evidence=evidence.filter(x=>x.id!==e.id);render();});records.append(box);}preview();}
-function preview(){if(!transaction)return;const gaps=$('gaps');gaps.replaceChildren();for(const c of checklist(transaction,evidence))gaps.append(el('span',`${c.complete?'Linked':'Missing'}: ${c.role}`,'badge'+(c.complete?' complete':'')));const r=report(transaction,evidence),target=$('report-preview');target.replaceChildren(el('h2',r.title),el('p',`Generated ${r.generatedAt} · ${transaction.title}`),el('p',`${transaction.kind.replaceAll('_',' ')} · ${transaction.amount} ${transaction.asset} · ${transaction.date}`),el('p',transaction.narrative||'Source narrative has not been provided.'));for(const line of r.limitations)target.append(el('p',line));target.append(el('h3','Evidence and unresolved gaps'));for(const c of r.checklist)target.append(el('p',`${c.role}: ${c.complete?'Reviewed evidence manually linked':'Evidence missing'}${c.complete?' · '+c.evidenceIds.join(', '):''}`));for(const e of r.evidence){target.append(el('h3',e.label),el('p',`ID: ${e.id} · ${e.review} · ${e.linked?'Linked':'Unlinked'} · ${e.provenance}`),el('p',`${e.amount||'No amount'} ${e.asset||''} · ${e.date||'No date'}`),el('p',e.notes||'No notes'),el('p',e.linkReason||'No link rationale'),el('p',e.match.reasons.join('; ')));}target.append(el('h3','Transaction structure (user supplied)'),el('pre',JSON.stringify(transaction,null,2)));}
-$('preview').addEventListener('click',preview);
-$('json').addEventListener('click',()=>{if(!transaction)return fail('case-status',Error('Save a transaction first.'));const url=URL.createObjectURL(new Blob([JSON.stringify(report(transaction,evidence),null,2)],{type:'application/json'}));const a=el('a');a.href=url;a.download='crypto-passport.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
-$('print').addEventListener('click',()=>{if(!transaction)return fail('case-status',Error('Save a transaction first.'));preview();window.print();});
-$('reset').addEventListener('click',()=>{if(confirm('Clear all case details and evidence from this session?')){for(const e of evidence)if(e.preview)URL.revokeObjectURL(e.preview);transaction=null;evidence=[];form.reset();$('evidence-form').reset();$('gaps').replaceChildren();$('report-preview').replaceChildren(el('p','Save a transaction to prepare your report.'));render();}});
-window.addEventListener('beforeunload',e=>{if(transaction||evidence.length){e.preventDefault();e.returnValue='';}});
+import {parseCSV, match, checklist, report} from './core.js';
+import {cleanTransaction, cleanEvidence, saveCase, openCase, validateStructure} from './casefile.js';
+import {demoCase} from './demo.js';
+
+let transaction = null, evidence = [], editingId = null;
+let transactionDirty = false, evidenceDirty = false;
+const $ = id => document.getElementById(id);
+const form = $('case-form'), evidenceForm = $('evidence-form');
+const fields = ['label','role','amount','asset','date','txid','notes'];
+function el(tag, text, cls) {
+  const n = document.createElement(tag);
+  if (text !== undefined) n.textContent = text;
+  if (cls) n.className = cls;
+  return n;
+}
+function data(f) { return Object.fromEntries(new FormData(f).entries()); }
+function status(id, message) { $(id).textContent = message; }
+form.addEventListener('input', () => { transactionDirty = true; status('case-status','Unsaved transaction changes. Save the transaction before exporting.'); });
+form.addEventListener('change', () => { transactionDirty = true; });
+evidenceForm.addEventListener('input', () => { evidenceDirty = true; });
+evidenceForm.addEventListener('change', () => { evidenceDirty = true; });
+function requireSaved() {
+  if (!transaction) throw Error('Save a transaction first.');
+  if (transactionDirty || evidenceDirty || editingId) throw Error('Save or cancel pending form changes before exporting.');
+}
+function action(parent, label, fn) {
+  const b = el('button', label); b.type = 'button';
+  b.addEventListener('click', fn); parent.append(b); return b;
+}
+function row(container, specs, values = {}) {
+  const box = el('div', undefined, 'transfer-row grid');
+  for (const [name, label, max] of specs) {
+    const l = el('label', label), input = el('input');
+    input.dataset.field = name; input.maxLength = max; input.value = values[name] ?? '';
+    l.append(input); box.append(l);
+  }
+  action(box, 'Remove transfer row', () => { box.remove(); transactionDirty = true; });
+  $(container).append(box);
+}
+const inputSpecs = [['txid','Previous transaction ID',64],['vout','Output index',10]];
+const outputSpecs = [['address','BTC recipient address',120],['satoshis','Value (whole satoshis)',80]];
+const tokenSpecs = [['contract','Token contract address',42],['from','Token sender',42],['to','Token recipient',42],['rawAmount','Raw token amount (whole units)',80],['decimals','Token decimals',3]];
+function addRow(container, specs, values) {
+  if ($(container).children.length >= 100) return status('case-status','Limit transfer details to 100 rows per group.');
+  row(container, specs, values);
+  transactionDirty = true;
+}
+$('add-input').onclick = () => addRow('btc-inputs', inputSpecs);
+$('add-output').onclick = () => addRow('btc-outputs', outputSpecs);
+$('add-token').onclick = () => addRow('evm-tokens', tokenSpecs);
+function networkUI() {
+  const network = form.elements.network.value;
+  $('chain-details').hidden = network === 'none';
+  $('chain-id-label').hidden = network !== 'EVM';
+  $('btc-details').hidden = network !== 'BTC' || !$('include-details').checked;
+  $('evm-details').hidden = network !== 'EVM' || !$('include-details').checked;
+}
+form.elements.network.onchange = networkUI;
+$('include-details').onchange = networkUI;
+function readRows(id) {
+  return [...$(id).children].map(r => Object.fromEntries([...r.querySelectorAll('input')].map(i => [i.dataset.field, i.value.trim()])));
+}
+function chainStructure() {
+  if (!$('include-details').checked || form.elements.network.value === 'none') return null;
+  if (form.elements.network.value === 'BTC') {
+    const inputs = readRows('btc-inputs').map(i => {
+      if (!/^\d+$/.test(i.vout)) throw Error('BTC output index must be a whole number.');
+      return {...i, vout: Number(i.vout)};
+    });
+    return validateStructure({inputs, outputs:readRows('btc-outputs')}, 'BTC');
+  }
+  const tokenTransfers = readRows('evm-tokens').map(t => {
+    if (!/^\d+$/.test(t.decimals)) throw Error('Token decimals must be a whole number.');
+    return {...t, decimals:Number(t.decimals)};
+  });
+  return validateStructure({from:$('evm-from').value.trim(), to:$('evm-to').value.trim(), valueWei:$('evm-value').value.trim(), tokenTransfers}, 'EVM');
+}
+form.onsubmit = event => {
+  event.preventDefault();
+  try {
+    const raw = data(form);
+    const next = cleanTransaction({...raw, amount:raw.amount.trim(), asset:raw.asset.trim().toUpperCase(), txid:raw.txid.trim(), structure:chainStructure()});
+    if (transaction && JSON.stringify(transaction) !== JSON.stringify(next)) for (const e of evidence) { e.linked = false; e.linkReason = ''; }
+    transaction = next; transactionDirty = false;
+    status('case-status','Transaction saved. Changed transaction details clear prior evidence links.'); render();
+  } catch (e) { status('case-status',e.message); }
+};
+function cancelEdit() {
+  editingId = null; evidenceDirty = false; evidenceForm.reset();
+  $('evidence-heading').textContent = 'Add evidence'; $('evidence-submit').textContent = 'Add evidence';
+  $('cancel-edit').hidden = true; $('attachment-note').textContent = '';
+}
+$('cancel-edit').onclick = cancelEdit;
+function edit(e) {
+  cancelEdit(); editingId = e.id;
+  for (const key of fields) evidenceForm.elements[key].value = e[key] || '';
+  $('evidence-heading').textContent = 'Edit evidence'; $('evidence-submit').textContent = 'Save evidence changes';
+  $('cancel-edit').hidden = false;
+  $('attachment-note').textContent = e.file ? `Keeping ${e.fileName} unless a replacement is selected.` : e.originalRequired ? `Reattach original: ${e.fileName}. Its contents are absent from this saved case.` : '';
+  evidenceForm.scrollIntoView({block:'start'}); evidenceForm.elements.label.focus();
+}
+evidenceForm.onsubmit = event => {
+  event.preventDefault();
+  try {
+    const raw = data(evidenceForm), file = raw.attachment;
+    const old = evidence.find(e => e.id === editingId);
+    if (!old && evidence.length >= 5000) throw Error('Limit a case to 5,000 evidence records.');
+    const cleaned = cleanEvidence({...raw, amount:raw.amount.trim(), asset:raw.asset.trim().toUpperCase(), txid:raw.txid.trim()});
+    const next = {...old, ...cleaned, id:old?.id || crypto.randomUUID(), provenance:old?.provenance || 'Manual entry', review:'unreviewed', linked:false, linkReason:''};
+    if (file.size) {
+      if (file.size > 10 * 1024 * 1024) throw Error('Attachment exceeds 10 MB.');
+      if (!['image/png','image/jpeg','image/webp','application/pdf'].includes(file.type)) throw Error('Choose PNG, JPEG, WebP or PDF.');
+      if (old?.preview) URL.revokeObjectURL(old.preview);
+      next.file = file; next.fileName = file.name; next.preview = URL.createObjectURL(file); next.originalRequired = false;
+    } else if (old) { next.fileName = old.fileName || ''; }
+    if (old) evidence = evidence.map(e => e.id === old.id ? next : e); else evidence.push(next);
+    cancelEdit(); status('evidence-status','Evidence saved as unreviewed. Review the original and any changed fields.'); render();
+  } catch (e) { status('evidence-status',e.message); }
+};
+$('csv').onchange = async event => {
+  try {
+    const file = event.target.files[0]; if (!file) return;
+    if (file.size > 2_000_000) throw Error('CSV exceeds 2 MB.');
+    const rows = parseCSV(await file.text()), role = $('csv-role').value;
+    if (evidence.length + rows.length > 5000) throw Error('Limit a case to 5,000 evidence records.');
+    evidence.push(...rows.map(r => ({...cleanEvidence({...r, role, label:r.reference || `${file.name} · row ${r.row}`, fileName:file.name, provenance:`CSV row ${r.row}`}), id:crypto.randomUUID(), review:'unreviewed', linked:false})));
+    status('evidence-status',`Imported ${rows.length} unreviewed records. No links created.`); render();
+  } catch (e) { status('evidence-status',e.message); }
+  finally { event.target.value = ''; }
+};
+function render() {
+  $('records').replaceChildren();
+  for (const e of evidence) {
+    const box = el('div', undefined, 'record');
+    box.append(el('h3',e.label), el('p',`${e.role} · ${e.provenance} · ${e.review} · ${e.linked?'Linked':'Unlinked'}`), el('p',`${e.date || 'Date missing'} · ${e.amount || 'Amount missing'} ${e.asset || ''}`));
+    if (e.notes) box.append(el('p',e.notes));
+    if (e.txid) box.append(el('p',e.txid));
+    if (e.originalRequired) box.append(el('p',`Original missing: ${e.fileName}. Edit this record to reattach before review.`, 'warning'));
+    if (e.file) {
+      if (e.file.type.startsWith('image/')) { const img = el('img'); img.src = e.preview; img.alt = e.fileName; box.append(img); }
+      const a = el('a',`Open original: ${e.fileName}`); a.href = e.preview; a.target = '_blank'; a.rel = 'noopener'; box.append(a);
+    }
+    if (transaction) { const m = match(transaction,e); box.append(el('p',`${m.candidate?'Candidate only':'Matching note'}: ${m.reasons.join('; ')}`)); }
+    action(box,'Edit evidence',() => edit(e));
+    action(box,e.review==='reviewed'?'Return to unreviewed':'I reviewed this record',() => {
+      if (e.originalRequired) return status('evidence-status','Reattach the missing original before reviewing this record.');
+      e.review = e.review==='reviewed'?'unreviewed':'reviewed'; e.linked=false; e.linkReason=''; render();
+    });
+    const rationale = el('textarea'); rationale.value=e.linkReason || ''; rationale.maxLength=4000;
+    const l = el('label','How does this support the transaction? Include mismatches and uncertainty.'); l.append(rationale); box.append(l);
+    if (e.previousLinkReason) box.append(el('p',`Previous explanation (requires reassessment): ${e.previousLinkReason}`));
+    action(box,e.linked?'Unlink':'Link to transaction',() => {
+      if (!transaction) return status('evidence-status','Save a transaction first.');
+      if (e.review!=='reviewed' || e.originalRequired) return status('evidence-status','Review this record and its original first.');
+      if (!e.linked && !rationale.value.trim()) return status('evidence-status','Enter a link explanation, including uncertainty.');
+      e.linkReason=e.linked?'':rationale.value.trim(); e.linked=!e.linked; render();
+    });
+    action(box,'Remove',() => {
+      if (e.preview) URL.revokeObjectURL(e.preview);
+      evidence=evidence.filter(x => x.id!==e.id); if (editingId===e.id) cancelEdit(); render();
+    });
+    $('records').append(box);
+  }
+  preview();
+}
+function preview() {
+  if (!transaction) { $('gaps').replaceChildren(); $('report-preview').replaceChildren(el('p','Save a transaction to prepare your report.')); return; }
+  $('gaps').replaceChildren(...checklist(transaction,evidence).map(c => el('span',`${c.complete?'Linked':'Missing'}: ${c.role}`,'badge'+(c.complete?' complete':''))));
+  const r=report(transaction,evidence), target=$('report-preview');
+  target.replaceChildren(el('h2',r.title), el('p',`Generated ${r.generatedAt} · ${transaction.title}`), el('p',`${transaction.kind.replaceAll('_',' ')} · ${transaction.amount} ${transaction.asset} · ${transaction.date}`), el('p',transaction.narrative || 'Source narrative has not been provided.'));
+  for (const line of r.limitations) target.append(el('p',line));
+  target.append(el('h3','Evidence and unresolved gaps'));
+  for (const c of r.checklist) target.append(el('p',`${c.role}: ${c.complete?'Reviewed evidence manually linked':'Evidence missing'}${c.complete?' · '+c.evidenceIds.join(', '):''}`));
+  target.append(el('h3','Evidence timeline — user supplied'));
+  for (const e of [...r.evidence].sort((a,b) => (a.date || '9999').localeCompare(b.date || '9999'))) {
+    target.append(el('h4',e.label), el('p',`ID: ${e.id} · ${e.role} · ${e.review} · ${e.linked?'Linked':'Unlinked'} · ${e.provenance}`), el('p',`${e.amount || 'No amount'} ${e.asset || ''} · ${e.date || 'No date'}`), el('p',e.notes || 'No notes'), el('p',e.linkReason || 'No link rationale'), el('p',e.match.reasons.join('; ')));
+    if (e.txid) target.append(el('p',`Transaction ID: ${e.txid}`));
+    if (e.fileName) target.append(el('p',`Source file: ${e.fileName}${e.originalRequired?' — original missing':' — original bytes not included in report'}`));
+  }
+  target.append(el('h3','Transaction structure (user supplied)'), el('pre',JSON.stringify(transaction,null,2)));
+}
+function download(value, filename) {
+  const url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json'}));
+  const a=el('a'); a.href=url; a.download=filename; a.click(); setTimeout(() => URL.revokeObjectURL(url),1000);
+}
+function load(value) {
+  transaction=value.transaction; evidence=value.evidence; transactionDirty=false;
+  for (const key of ['kind','title','amount','asset','date','network','txid','chainId','narrative']) form.elements[key].value=transaction[key] || '';
+  for (const id of ['btc-inputs','btc-outputs','evm-tokens']) $(id).replaceChildren();
+  const x=transaction.structure; $('include-details').checked=Boolean(x);
+  if (x && transaction.network==='BTC') { for (const i of x.inputs) row('btc-inputs',inputSpecs,i); for (const o of x.outputs) row('btc-outputs',outputSpecs,o); }
+  if (x && transaction.network==='EVM') { $('evm-from').value=x.from; $('evm-to').value=x.to; $('evm-value').value=x.valueWei; for (const t of x.tokenTransfers) row('evm-tokens',tokenSpecs,t); }
+  networkUI(); cancelEdit(); render();
+}
+function requireEmpty() { if (transaction || evidence.length || transactionDirty || evidenceDirty) throw Error('Save your current case and clear the session before loading another.'); }
+$('save-case').onclick = () => { try { requireSaved(); download(saveCase(transaction,evidence),'crypto-passport.case.json'); status('session-status','Case file saved without originals. Keep originals separately and store the file privately.'); } catch(e) { status('session-status',e.message); } };
+$('open-case').onchange = async event => {
+  try { requireEmpty(); const file=event.target.files[0]; if (!file) return; if(file.size>5_000_000) throw Error('Case file exceeds 5 MB.'); load(openCase(await file.text())); status('session-status','Case reopened. Review all records again and reattach missing originals before linking.'); }
+  catch(e) { status('session-status',e.message); } finally { event.target.value=''; }
+};
+$('demo').onclick = () => { try { requireEmpty(); load(demoCase()); status('session-status','SYNTHETIC example loaded. Every record is fictional and unreviewed. Ownership, income and fee questions remain unresolved.'); } catch(e) { status('session-status',e.message); } };
+$('preview').onclick=preview;
+$('json').onclick=() => { try { requireSaved(); download(report(transaction,evidence),'crypto-passport.report.json'); } catch(e) { status('session-status',e.message); } };
+$('print').onclick=() => { try { requireSaved(); preview(); window.print(); } catch(e) { status('session-status',e.message); } };
+$('reset').onclick=() => {
+  if (!confirm('Clear this local session? Save a case file first if you need to reopen it.')) return;
+  for (const e of evidence) if (e.preview) URL.revokeObjectURL(e.preview);
+  transaction=null; evidence=[]; transactionDirty=false; form.reset(); cancelEdit();
+  for (const id of ['btc-inputs','btc-outputs','evm-tokens']) $(id).replaceChildren();
+  for (const id of ['session-status','case-status','evidence-status']) status(id,'');
+  networkUI(); render();
+};
+window.addEventListener('beforeunload',e => { if (transaction || evidence.length || transactionDirty || evidenceDirty) { e.preventDefault(); e.returnValue=''; } });
+networkUI();

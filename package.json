@@ -1,1 +1,14 @@
-{"name":"crypto-passport","version":"0.1.0","private":true,"type":"module","scripts":{"start":"node server.mjs","test":"node --test","check":"node --check app.js && node --check core.js"},"engines":{"node":">=22"}}
+{
+  "name": "crypto-passport",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test",
+    "check": "node --check app.js && node --check core.js && node --check casefile.js && node --check demo.js && node --check server.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
