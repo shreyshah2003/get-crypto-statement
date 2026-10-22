@@ -1,9 +1,12 @@
 import {parseCSV, match, checklist, report} from './core.js';
 import {cleanTransaction, cleanEvidence, saveCase, openCase, validateStructure} from './casefile.js';
 import {demoCase} from './demo.js';
+import {fetchBTC,btcEvidence,btcAmount} from './btc.js';
+import {createReportPDF} from './pdf.js';
 
 let transaction = null, evidence = [], editingId = null;
 let transactionDirty = false, evidenceDirty = false;
+let pendingBTC=null, lookupGeneration=0;
 const $ = id => document.getElementById(id);
 const form = $('case-form'), evidenceForm = $('evidence-form');
 const fields = ['label','role','amount','asset','date','txid','notes'];
@@ -105,7 +108,7 @@ evidenceForm.onsubmit = event => {
     const raw = data(evidenceForm), file = raw.attachment;
     const old = evidence.find(e => e.id === editingId);
     if (!old && evidence.length >= 5000) throw Error('Limit a case to 5,000 evidence records.');
-    const cleaned = cleanEvidence({...raw, amount:raw.amount.trim(), asset:raw.asset.trim().toUpperCase(), txid:raw.txid.trim()});
+    const cleaned = cleanEvidence({...raw, amount:raw.amount.trim(), asset:raw.asset.trim().toUpperCase(), txid:raw.txid.trim(),blockchain:old?.blockchain,selectedOutput:old?.selectedOutput});
     const next = {...old, ...cleaned, id:old?.id || crypto.randomUUID(), provenance:old?.provenance || 'Manual entry', review:'unreviewed', linked:false, linkReason:''};
     if (file.size) {
       if (file.size > 10 * 1024 * 1024) throw Error('Attachment exceeds 10 MB.');
@@ -135,6 +138,7 @@ function render() {
     box.append(el('h3',e.label), el('p',`${e.role} · ${e.provenance} · ${e.review} · ${e.linked?'Linked':'Unlinked'}`), el('p',`${e.date || 'Date missing'} · ${e.amount || 'Amount missing'} ${e.asset || ''}`));
     if (e.notes) box.append(el('p',e.notes));
     if (e.txid) box.append(el('p',e.txid));
+    if (e.blockchain) appendSnapshot(box,e.blockchain,e.selectedOutput);
     if (e.originalRequired) box.append(el('p',`Original missing: ${e.fileName}. Edit this record to reattach before review.`, 'warning'));
     if (e.file) {
       if (e.file.type.startsWith('image/')) { const img = el('img'); img.src = e.preview; img.alt = e.fileName; box.append(img); }
@@ -175,6 +179,7 @@ function preview() {
   for (const e of [...r.evidence].sort((a,b) => (a.date || '9999').localeCompare(b.date || '9999'))) {
     target.append(el('h4',e.label), el('p',`ID: ${e.id} · ${e.role} · ${e.review} · ${e.linked?'Linked':'Unlinked'} · ${e.provenance}`), el('p',`${e.amount || 'No amount'} ${e.asset || ''} · ${e.date || 'No date'}`), el('p',e.notes || 'No notes'), el('p',e.linkReason || 'No link rationale'), el('p',e.match.reasons.join('; ')));
     if (e.txid) target.append(el('p',`Transaction ID: ${e.txid}`));
+    if (e.blockchain) appendSnapshot(target,e.blockchain,e.selectedOutput);
     if (e.fileName) target.append(el('p',`Source file: ${e.fileName}${e.originalRequired?' — original missing':' — original bytes not included in report'}`));
   }
   target.append(el('h3','Transaction structure (user supplied)'), el('pre',JSON.stringify(transaction,null,2)));
@@ -183,6 +188,41 @@ function download(value, filename) {
   const url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json'}));
   const a=el('a'); a.href=url; a.download=filename; a.click(); setTimeout(() => URL.revokeObjectURL(url),1000);
 }
+function downloadBytes(bytes,filename,type) {
+  const url=URL.createObjectURL(new Blob([bytes],{type}));const a=el('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
+}
+function appendSnapshot(parent,b,selected) {
+  const s=b.status;
+  parent.append(el('h4','Bitcoin provider snapshot'),el('p',`Source: ${b.sourceUrl} | Retrieved ${b.retrievedAt} | ${b.acquisition}`),el('p',`Fee ${b.feeSatoshis} satoshis | ${s.confirmed?'Provider reports confirmed':'Unconfirmed'} | Confirmations at snapshot: ${s.confirmations ?? 'unavailable'}`),el('p',`Selected output ${selected}: ${btcAmount(b.outputs[selected].satoshis)} BTC to ${b.outputs[selected].address || '(no address)'}. Entered fields may differ after manual edits; the snapshot stays unchanged.`));
+  const details=el('details');details.append(el('summary','All inputs, outputs and snapshot limitations'),el('pre',JSON.stringify(b,null,2)));parent.append(details);
+}
+$('btc-lookup-id').oninput=()=>{pendingBTC=null;lookupGeneration++;$('btc-consent').checked=false;$('btc-result').replaceChildren();};
+$('btc-fetch').onclick=async()=>{
+  const generation=++lookupGeneration,id=$('btc-lookup-id').value.trim();
+  pendingBTC=null;$('btc-result').replaceChildren();$('btc-fetch').disabled=true;status('btc-status','Retrieving provider snapshot…');
+  try {
+    const snapshot=await fetchBTC(id,{consent:$('btc-consent').checked});
+    if(generation!==lookupGeneration)return;
+    pendingBTC=snapshot;
+    const result=$('btc-result');
+    result.append(el('p',`Retrieved ${snapshot.inputs.length} inputs, ${snapshot.outputs.length} outputs; fee ${snapshot.feeSatoshis} satoshis. ${snapshot.status.confirmed?'Provider reports confirmed.':'Unconfirmed; block date unavailable.'} No ownership inference.`));
+    const label=el('label','Output to explain'),select=el('select');select.id='btc-output';
+    const empty=el('option','Choose an output explicitly');empty.value='';select.append(empty);
+    for(const output of snapshot.outputs){const option=el('option',`${output.index}: ${btcAmount(output.satoshis)} BTC → ${output.address || '(no address; inspect script)'}`);option.value=String(output.index);option.disabled=BigInt(output.satoshis)===0n;select.append(option);}
+    label.append(select);result.append(label);
+    action(result,'Add selected output as evidence',()=>{
+      try {
+        if(!pendingBTC || select.value==='')throw Error('Choose a positive output first.');
+        if(evidence.length>=5000)throw Error('Limit a case to 5,000 evidence records.');
+        evidence.push({...btcEvidence(pendingBTC,Number(select.value)),id:crypto.randomUUID()});
+        status('btc-status','Added as unreviewed evidence. The case transaction is unchanged; review the snapshot before linking.');render();
+      }catch(e){status('btc-status',e.message);}
+    });
+    const details=el('details');details.append(el('summary','Inspect full provider snapshot'),el('pre',JSON.stringify(snapshot,null,2)));result.append(details);
+    status('btc-status',`Snapshot retrieved at ${snapshot.retrievedAt}. Confirmations: ${snapshot.status.confirmations ?? 'unavailable (tip height missing or inconsistent)'}.`);
+  }catch(e){if(generation===lookupGeneration)status('btc-status',e.message);}
+  finally{$('btc-fetch').disabled=false;}
+};
 function load(value) {
   transaction=value.transaction; evidence=value.evidence; transactionDirty=false;
   for (const key of ['kind','title','amount','asset','date','network','txid','chainId','narrative']) form.elements[key].value=transaction[key] || '';
@@ -202,10 +242,15 @@ $('demo').onclick = () => { try { requireEmpty(); load(demoCase()); status('sess
 $('preview').onclick=preview;
 $('json').onclick=() => { try { requireSaved(); download(report(transaction,evidence),'crypto-passport.report.json'); } catch(e) { status('session-status',e.message); } };
 $('print').onclick=() => { try { requireSaved(); preview(); window.print(); } catch(e) { status('session-status',e.message); } };
+$('pdf').onclick=async()=>{
+  try{requireSaved();$('pdf').disabled=true;status('session-status','Rendering report PDF locally…');const snapshot=report(transaction,evidence);const bytes=await createReportPDF(snapshot);downloadBytes(bytes,'crypto-passport.report.pdf','application/pdf');status('session-status','PDF prepared locally. Page images preserve displayed text; JSON remains the searchable record.');}
+  catch(e){status('session-status',e.message);}finally{$('pdf').disabled=false;}
+};
 $('reset').onclick=() => {
   if (!confirm('Clear this local session? Save a case file first if you need to reopen it.')) return;
   for (const e of evidence) if (e.preview) URL.revokeObjectURL(e.preview);
   transaction=null; evidence=[]; transactionDirty=false; form.reset(); cancelEdit();
+  pendingBTC=null;lookupGeneration++;$('btc-result').replaceChildren();$('btc-lookup-id').value='';$('btc-consent').checked=false;status('btc-status','');
   for (const id of ['btc-inputs','btc-outputs','evm-tokens']) $(id).replaceChildren();
   for (const id of ['session-status','case-status','evidence-status']) status(id,'');
   networkUI(); render();

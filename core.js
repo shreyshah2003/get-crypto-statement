@@ -39,6 +39,30 @@ export function parseCSV(text) {
     return {...item, asset:item.asset.toUpperCase(), row:index + 2};
   });
 }
-export function match(t,e){const reasons=[];if(e.review!=='reviewed')return {candidate:false,reasons:['Evidence has not been reviewed']};if(e.asset!==t.asset)return {candidate:false,reasons:['Different asset; conversion requires separate evidence']};try{if(decimal(e.amount)!==decimal(t.amount))return {candidate:false,reasons:['Amount differs; no fee or FX assumptions applied']};}catch{return {candidate:false,reasons:['Missing or invalid amount']};}const days=Math.abs(Date.parse(t.date)-Date.parse(e.date))/86400000;if(!Number.isFinite(days)||days>3)return {candidate:false,reasons:['Outside the 3-day window']};reasons.push('Exact asset and amount',`${days} day date difference`);if(e.txid&&t.txid){if(e.txid.toLowerCase()!==t.txid.toLowerCase())return {candidate:false,reasons:['Transaction ID conflicts']};reasons.push('Transaction ID agrees');}return {candidate:true,reasons};}
+export function match(t,e) {
+  const reasons=[];
+  if(e.originalRequired) return {candidate:false,reasons:['Original attachment is missing']};
+  if(e.review!=='reviewed') return {candidate:false,reasons:['Evidence has not been reviewed']};
+  if(e.blockchain) {
+    try {
+      const b=e.blockchain, output=b.outputs[e.selectedOutput];
+      if(!b.status.confirmed) return {candidate:false,reasons:['BTC snapshot is unconfirmed; confirmation and date gaps need review']};
+      const blockDate=new Date(b.status.blockTime*1000).toISOString().slice(0,10);
+      if(!output || e.asset!=='BTC' || String(e.txid).toLowerCase()!==b.txid || decimal(e.amount)!==BigInt(output.satoshis)*10000000000n || e.date!==blockDate)
+        return {candidate:false,reasons:['Entered fields differ from the preserved BTC snapshot; explain any conversion or date adjustment manually']};
+    } catch { return {candidate:false,reasons:['BTC snapshot fields are incomplete or inconsistent']}; }
+  }
+  if(e.asset!==t.asset) return {candidate:false,reasons:['Different asset; conversion requires separate evidence']};
+  try { if(decimal(e.amount)!==decimal(t.amount)) return {candidate:false,reasons:['Amount differs; no fee or FX assumptions applied']}; }
+  catch { return {candidate:false,reasons:['Missing or invalid amount']}; }
+  const days=Math.abs(Date.parse(t.date)-Date.parse(e.date))/86400000;
+  if(!Number.isFinite(days)||days>3) return {candidate:false,reasons:['Outside the 3-day window']};
+  reasons.push('Exact asset and amount',days+' day date difference');
+  if(e.txid&&t.txid) {
+    if(e.txid.toLowerCase()!==t.txid.toLowerCase()) return {candidate:false,reasons:['Transaction ID conflicts']};
+    reasons.push('Transaction ID agrees');
+  }
+  return {candidate:true,reasons};
+}
 export function checklist(t,evidence){return requirements[t.kind].map(role=>{const linked=evidence.filter(e=>e.role===role&&e.linked&&e.review==='reviewed'&&!e.originalRequired);return {role,complete:linked.length>0,evidenceIds:linked.map(e=>e.id)};});}
-export function report(t,evidence){return {schemaVersion:1,generatedAt:new Date().toISOString(),title:'Crypto Passport — evidence summary',limitations:['User-supplied information; no independent verification, OCR, blockchain lookup, ownership verification, tax or compliance conclusion.','Linked evidence reflects manual review. Exact amount matching does not establish source of funds.','Original files remain in this browser session and are not embedded in exports.'],transaction:t,evidence:evidence.map(({file,preview,...e})=>({...e,match:match(t,e)})),checklist:checklist(t,evidence)};}
+export function report(t,evidence){return {schemaVersion:1,generatedAt:new Date().toISOString(),title:'Crypto Passport — evidence summary',limitations:['User-entered evidence and optional provider-reported BTC snapshots; no independent cryptographic, ownership or source-of-funds verification, OCR, tax or compliance conclusion.','Linked evidence reflects manual review. Exact amount matching does not establish source of funds.','Original files remain in this browser session and are not embedded in exports.'],transaction:t,evidence:evidence.map(({file,preview,...e})=>({...e,match:match(t,e)})),checklist:checklist(t,evidence)};}

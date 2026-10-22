@@ -1,4 +1,5 @@
 import {validateTransaction, decimal} from './core.js';
+import {cleanBTCSnapshot} from './btc.js';
 
 const roles = ['bank', 'exchange', 'chain', 'ownership', 'source'];
 const networks = ['none', 'BTC', 'EVM'];
@@ -54,6 +55,11 @@ export function cleanEvidence(e) {
   if (result.amount) decimal(result.amount);
   if (result.asset && !/^[A-Z0-9]{2,12}$/.test(result.asset)) throw Error('Invalid evidence asset.');
   if (result.date && (!/^\d{4}-\d{2}-\d{2}$/.test(result.date) || !Number.isFinite(Date.parse(result.date)) || new Date(result.date).toISOString().slice(0,10) !== result.date)) throw Error('Invalid evidence date.');
+  if (e.blockchain != null) {
+    result.blockchain=cleanBTCSnapshot(e.blockchain);
+    if (!Number.isInteger(e.selectedOutput) || !result.blockchain.outputs[e.selectedOutput]) throw Error('Invalid selected BTC output.');
+    result.selectedOutput=e.selectedOutput;
+  }
   return result;
 }
 
@@ -69,6 +75,10 @@ export function openCase(raw) {
   const value = JSON.parse(raw);
   if (value.format !== 'crypto-passport-case' || value.version !== 1 || !Array.isArray(value.evidence) || value.evidence.length > 5000) throw Error('Unsupported case file. Choose a saved case, not a report export.');
   const transaction = cleanTransaction(value.transaction);
-  const evidence = value.evidence.map((e, index) => ({...cleanEvidence(e), id: `reopened-${index + 1}`, review: 'unreviewed', linked: false, linkReason: '', previousLinkReason: text(e.linkReason) || text(e.previousLinkReason), originalRequired: Boolean(e.originalRequired), provenance: text(e.provenance) || 'Reopened case'}));
+  const evidence = value.evidence.map((e, index) => {
+    const cleaned=cleanEvidence(e);
+    if (cleaned.blockchain) cleaned.blockchain.acquisition='case-file-unverified';
+    return {...cleaned, id: `reopened-${index + 1}`, review: 'unreviewed', linked: false, linkReason: '', previousLinkReason: text(e.linkReason) || text(e.previousLinkReason), originalRequired: Boolean(e.originalRequired), provenance: text(e.provenance) || 'Reopened case'};
+  });
   return {transaction, evidence};
 }

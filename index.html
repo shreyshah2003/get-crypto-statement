@@ -48,6 +48,15 @@
   </section>
   <section id="evidence" class="card">
     <h2>02 / Build the evidence trail</h2>
+    <fieldset id="btc-lookup">
+      <legend>Retrieve a Bitcoin mainnet transaction</legend>
+      <p>Fetch a provider snapshot, then choose a specific output to add as unreviewed evidence. The case amount and transaction are never overwritten.</p>
+      <label>Bitcoin transaction ID to retrieve<input id="btc-lookup-id" maxlength="64" autocomplete="off"></label>
+      <label><input id="btc-consent" type="checkbox"> I approve sending this transaction ID and my IP address to mempool.space.</label>
+      <p class="hint">Only the ID is sent in the request URL. The provider also sees connection metadata. No case narrative, documents or other evidence are sent. No automatic refresh. Mainnet only; ownership and source of funds remain unverified.</p>
+      <button id="btc-fetch" type="button">Fetch from mempool.space</button>
+      <p id="btc-status" role="status"></p><div id="btc-result"></div>
+    </fieldset>
     <p>Add bank or exchange CSV records, screenshots, or manual evidence. Review each original and enter only what it supports. Editing a record clears its review and link.</p>
     <label>CSV source<select id="csv-role"><option value="bank">Bank record</option><option value="exchange">Exchange record</option></select></label>
     <label>Import CSV (up to 2 MB, 5,000 rows)<input id="csv" type="file" accept=".csv,text/csv"></label>
@@ -69,7 +78,8 @@
   </section>
   <section id="report" class="card">
     <h2>03 / Your passport report</h2><div id="gaps"></div>
-    <div class="actions"><button id="preview">Refresh preview</button><button id="json">Export report JSON</button><button id="print">Print / save PDF</button><button id="reset" class="secondary">Clear session</button></div>
+    <div class="actions"><button id="preview">Refresh preview</button><button id="json">Export report JSON</button><button id="pdf">Download report PDF</button><button id="print">Print / save PDF</button><button id="reset" class="secondary">Clear session</button></div>
+    <p class="hint">Downloaded PDF pages are rendered locally as images, including Unicode text. Use JSON for searchable, machine-readable data. No original attachments are embedded.</p>
     <article id="report-preview"><p>Save a transaction to prepare your report.</p></article>
   </section>
 </main>
