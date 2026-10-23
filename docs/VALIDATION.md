@@ -2,6 +2,8 @@
 
 ## Automated
 
+Hosting preparation: `npm run build` packaged 222 explicitly selected app/PDF/OCR assets. `npm run check:build` verified all asset sizes and SHA-256 hashes, same-origin worker/model paths, generated HTML policy, and absence of unexpected/private/source files. This verifies packaging; hosted preview/production checks must still run against the target Lovable project.
+
 `npm test`: 44 tests pass. Coverage includes exact decimals; quoted/BOM/multiline CSV; bad dates, duplicate headers and precision limits; BTC/EVM hashes; precise BTC/EVM structures; cross-asset/amount/date/hash exclusions; role gaps; report omission of originals; save/reopen metadata round trips; imported trust reset; original reattachment requirements; hostile text as data; unsupported and oversized case files. Reader tests cover explicit decimal formats, Indian grouping, date ambiguity, source page/line and actual OCR scores, no target-derived invented values, ID/date exclusions, bounds, already-aborted reads and source notes surviving exports/import trust reset. `npm run check` passes for every app module.
 
 ## Local PDF/OCR reader — 23 October 2026

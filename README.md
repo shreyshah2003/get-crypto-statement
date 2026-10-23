@@ -13,6 +13,8 @@ npm start
 
 Open http://127.0.0.1:5173. Installation downloads pinned PDF.js, Tesseract.js and English OCR assets; document reading then runs locally without a CDN or document service. Run `npm test` and `npm run check` to validate the app.
 
+`npm run build` packages the browser app and local reader assets into `dist/`; `npm run check:build` verifies the package and its content hashes. See [hosting notes](docs/DEPLOYMENT.md) for the Lovable handoff and hosted acceptance checks.
+
 See [MVP guide](docs/MVP.md) for the workflow, CSV format, BTC/EVM structures, privacy model, limitations and acceptance checklist.
 
 Save/reopen case files, guided BTC/EVM entry, editable evidence and a fictional end-to-end walkthrough are included. Optional consent-based Bitcoin mainnet lookup retrieves a provider snapshot; users select a specific output to add as unreviewed evidence. Ethereum mainnet lookup also retrieves receipt status, native values, ERC-20-shaped events, optional decimals and exact gas/blob fees through explicitly approved dRPC reads. Other EVM networks remain manual. Downloadable PDF reports render locally, with report JSON retained for searchable data. Case reopening resets review and links and requires reattachment of missing originals. See the [validation record](docs/VALIDATION.md) for tested behavior and remaining checks.
