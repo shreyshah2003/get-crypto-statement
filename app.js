@@ -4,6 +4,7 @@ import {demoCase} from './demo.js';
 import {fetchBTC,btcEvidence,btcAmount} from './btc.js';
 import {createReportPDF} from './pdf.js';
 import {fetchEVM,evmEvidence} from './evm.js';
+import {attachmentReader} from './reader-ui.js';
 
 let transaction = null, evidence = [], editingId = null;
 let transactionDirty = false, evidenceDirty = false;
@@ -12,6 +13,7 @@ let pendingEVM=null,evmGeneration=0;
 const $ = id => document.getElementById(id);
 const form = $('case-form'), evidenceForm = $('evidence-form');
 const fields = ['label','role','amount','asset','date','txid','notes'];
+const reader=attachmentReader({form:evidenceForm,getExistingFile:()=>evidence.find(e=>e.id===editingId)?.file,getTarget:()=>({amount:form.elements.amount.value.trim(),asset:form.elements.asset.value.trim().toUpperCase(),date:form.elements.date.value}),onDirty:()=>{evidenceDirty=true;}});
 function el(tag, text, cls) {
   const n = document.createElement(tag);
   if (text !== undefined) n.textContent = text;
@@ -92,6 +94,7 @@ form.onsubmit = event => {
   } catch (e) { status('case-status',e.message); }
 };
 function cancelEdit() {
+  reader.reset();
   editingId = null; evidenceDirty = false; evidenceForm.reset();
   $('evidence-heading').textContent = 'Add evidence'; $('evidence-submit').textContent = 'Add evidence';
   $('cancel-edit').hidden = true; $('attachment-note').textContent = '';
@@ -109,6 +112,7 @@ evidenceForm.onsubmit = event => {
   event.preventDefault();
   try {
     const raw = data(evidenceForm), file = raw.attachment;
+    if(reader.isBusy())throw Error('Wait for attachment reading to finish or cancel it before saving evidence.');
     const old = evidence.find(e => e.id === editingId);
     if (!old && evidence.length >= 5000) throw Error('Limit a case to 5,000 evidence records.');
     const cleaned = cleanEvidence({...raw, amount:raw.amount.trim(), asset:raw.asset.trim().toUpperCase(), txid:raw.txid.trim(),blockchain:old?.blockchain,selectedOutput:old?.selectedOutput,evm:old?.evm,selectedTransfer:old?.selectedTransfer});

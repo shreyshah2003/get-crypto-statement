@@ -8,4 +8,5 @@ legend{font-size:14px;font-weight:650}
 .intro label{margin-top:18px}
 input[type=checkbox]{align-self:flex-start}
 .record h3{margin-top:0}h4{margin-bottom:8px}
+#reader-result{overflow-wrap:anywhere}#reader-result label{margin-top:16px}#reader-result select{width:100%;max-width:100%}#reader-result pre{max-height:380px;overflow:auto;background:#f4f6f2;padding:12px}#attachment-reader p{font-weight:400}
 @media print{h2,h3,h4{break-after:avoid}p,pre{orphans:3;widows:3}.record{break-inside:avoid}a{color:inherit}#report-preview{font-size:11px;line-height:1.4}#report-preview p{margin:7px 0}}

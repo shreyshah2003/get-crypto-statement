@@ -2,7 +2,7 @@
 
 ## Run
 
-Node.js 22+: `npm start`, then open http://127.0.0.1:5173. There are no runtime packages to install. `npm test` runs the deterministic core and case-file tests; `npm run check` checks all application modules. The server binds only to 127.0.0.1 and serves an explicit asset allowlist.
+Node.js 22.13+: run `npm ci`, then `npm start` and open http://127.0.0.1:5173 in a modern browser with WebAssembly. Pinned dependencies install PDF.js, Tesseract.js and local English language data. No CDN/document API is needed for reading. `npm test` runs deterministic behavior tests; `npm run check` checks application modules. The server binds only to 127.0.0.1 and serves an explicit asset allowlist, including the required installed reader assets.
 
 ## Workflow
 
@@ -12,6 +12,22 @@ Node.js 22+: `npm start`, then open http://127.0.0.1:5173. There are no runtime 
 4. Candidate matching requires reviewed evidence, identical asset and exact decimal amount within three calendar days. Conflicting hashes reject candidates. There is no inferred FX, fee adjustment, aggregation, ownership or authenticity. Manually link reviewed records with a written explanation; explicitly explain mismatches. A candidate never links itself. Changing the saved transaction clears prior links and current link explanations.
 5. Review the role checklist and chronological evidence report. A linked role means reviewed evidence was manually attached to the explanation, not that its authenticity or sufficiency was established. Unresolved source, ownership, fees and intermediary questions belong in notes and the source narrative.
 6. Export a report JSON, download a report PDF, or use the optional print action. PDF download is rendered locally as page images with Unicode text, page numbers, wrapping and evidence groups kept together where they fit. It supports up to 150 pages; use JSON for larger reports and searchable/machine-readable data. Original bytes are never embedded. Review and redact entered data before sharing.
+
+## Read a PDF or screenshot locally
+
+Select an attachment under Add evidence (or Edit evidence to use an existing original), then press **Read attachment locally**. PDF text and AcroForm widget values are read directly; pages with very little text are rendered locally for English OCR. For scans with an existing header/text layer, choose **Use OCR on every selected page**. PNG/JPEG/WebP screenshots also use local OCR. No attachment bytes, extracted text or document filename are sent to a document service.
+
+The default range is pages 1–3, capped to the document's length. Each read accepts up to 10 pages and 10 MB; partial ranges are labelled explicitly, so relevant records on unread pages are not implied absent. Select another range for longer statements. Reading has a three-minute deadline, cancellation, an 8-million-pixel render cap per page and a 300,000-character extracted-text cap. An unlocked copy is needed for encrypted PDFs. English printed text is supported; handwriting, poor scans, complex layouts, non-English scripts and XFA forms can need manual entry.
+
+Amount/date suggestions include page, extracted-line number, source snippet, method and actual page OCR score where available. The entered transaction amount/date are used only to label agreement; they never supply absent document values or select a record automatically. Fees, balances and multiple transaction rows are separate suggestions for manual assessment. A page OCR score is not a field-level accuracy guarantee or authenticity verdict. Dollar signs alone do not identify USD. Negative amounts are labelled for direction review and suggested as positive magnitudes, matching the MVP's positive-amount evidence model.
+
+Choose **Numeric date order** when the document uses day/month/year or month/day/year. By default, `03/04/2026` shows both interpretations. Two-digit years are not guessed. Choose the explicit decimal-point or decimal-comma **Number format**; western and Indian thousands grouping is supported. Digits are never rounded through floating point or silently corrected from OCR lookalikes.
+
+Select amount and/or date explicitly, then press **Use selected values in evidence form**. This replaces only selected evidence fields, fills currency only when identified, and appends source/page notes. The original case transaction, review and links are unchanged. Saving the evidence leaves it unreviewed/unlinked. Inspect the original/source context, then review and explain links normally. Applied source notes survive reports and case save/reopen; full extracted text is temporary and original reattachment rules still apply. Clear/cancel/edit/file changes discard pending suggestions and prevent stale reads from applying to another original.
+
+Implementation references: [PDF.js](https://mozilla.github.io/pdf.js/), [Tesseract.js API](https://github.com/naptha/tesseract.js/blob/master/docs/api.md), [local asset paths](https://github.com/naptha/tesseract.js/blob/master/docs/local-installation.md). Library licenses remain in installed npm packages; exact dependency versions and integrity hashes are in package-lock.json.
+
+For optional developer reproduction, `scripts/make-reader-fixtures.py` uses Python Pillow, reportlab and pypdf to create labelled fabricated digital, scanned, form and encrypted PDFs plus a screenshot under the ignored `scripts/reader-fixtures/` directory. Those Python packages are not needed to run the app. Keep real customer documents out of fixtures and Git history.
 
 ## Bitcoin mainnet lookup
 
@@ -61,7 +77,7 @@ Required headers: `date,amount,asset`. Optional: `reference,txid`. ISO calendar 
 
 ## Privacy and limits
 
-No document uploads, telemetry, OCR, independent verification, accounts or database. External network calls occur only for the explicitly approved BTC/Ethereum lookups described above. The CSP permits connections only to mempool.space and eth.drpc.org; the local server serves a static allowlist and rejects non-GET/HEAD methods. Case data and files live in browser memory. PNG/JPEG/WebP/PDF attachments are limited to 10 MB each. Untrusted text is rendered with textContent; imported JSON is treated as data, never instructions. Downloads contain personal data entered by the user and must be protected separately. PDF page images use browser fonts locally; no remote font service or PDF server receives data. Do not put customer evidence in this public repository.
+No document uploads, telemetry, independent verification, accounts or database. PDF/OCR reads installed same-origin assets; external network calls occur only for explicitly approved BTC/Ethereum lookups. The CSP permits same-origin assets, named blockchain providers and local WebAssembly compilation. The server exposes a fixed asset allowlist and rejects non-GET/HEAD methods; it provides no document-upload endpoint. Case data, files and extracted text live in browser memory. OCR language caching is disabled. PNG/JPEG/WebP/PDF attachments are limited to 10 MB each. Untrusted text is rendered with textContent; imported JSON is data, never instructions. Downloads contain entered personal data and selected extraction source notes and must be protected separately. No remote font/PDF/OCR service receives data. Do not put customer evidence in this public repository.
 
 No Lovable tools/credits or deployment are configured. Future authentication, private storage, retention/deletion and additional-network ingestion require separate implementation. Deployment requires explicit approval. This MVP makes no financial, legal, tax or compliance determination.
 

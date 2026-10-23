@@ -4,7 +4,7 @@ Use fabricated data only for this walkthrough. The app remains local; no deploym
 
 ## Start
 
-Run `npm start` with Node.js 22 or newer and open http://127.0.0.1:5173 in a normal browser. No packages need installing. If the preview is already running, just open the address. Save a case file before closing a session you want to keep.
+Run `npm ci` once with Node.js 22.13 or newer, then `npm start` and open http://127.0.0.1:5173 in a modern browser. Reader assets are installed locally. If the preview is already running, just open the address. Save a case file before closing a session you want to keep.
 
 ## Checks completed on 22 October 2026
 

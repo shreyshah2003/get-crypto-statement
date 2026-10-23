@@ -1,8 +1,24 @@
-# MVP validation — 22 October 2026
+# MVP validation — updated 23 October 2026
 
 ## Automated
 
-`npm test`: 34 tests pass. Coverage includes exact decimals; quoted/BOM/multiline CSV; bad dates, duplicate headers and precision limits; BTC/EVM hashes; precise BTC/EVM structures; cross-asset/amount/date/hash exclusions; role gaps; report omission of originals; save/reopen metadata round trips; imported trust reset; original reattachment requirements; hostile text as data; unsupported and oversized case files. `npm run check` passes for every app module.
+`npm test`: 44 tests pass. Coverage includes exact decimals; quoted/BOM/multiline CSV; bad dates, duplicate headers and precision limits; BTC/EVM hashes; precise BTC/EVM structures; cross-asset/amount/date/hash exclusions; role gaps; report omission of originals; save/reopen metadata round trips; imported trust reset; original reattachment requirements; hostile text as data; unsupported and oversized case files. Reader tests cover explicit decimal formats, Indian grouping, date ambiguity, source page/line and actual OCR scores, no target-derived invented values, ID/date exclusions, bounds, already-aborted reads and source notes surviving exports/import trust reset. `npm run check` passes for every app module.
+
+## Local PDF/OCR reader — 23 October 2026
+
+Browser checks used generated, visibly labelled fabricated fixtures only, without customer documents or public transaction lookups:
+
+- A two-page digital PDF yielded 50000 USD, fee 15 USD and closing balance 62500 USD as separate source-backed suggestions. The first-page ISO date agreed with the entered transaction; `03/04/2026` on page two displayed both interpretations. No suggestion was preselected. Applying without a choice was rejected. Explicit amount/date choices filled the evidence form and appended page/line/source notes; saving left the record unreviewed/unlinked and bank/source gaps open.
+- An image-only PDF invoked local Tesseract OCR and returned 1250.75 INR and 2026-10-23 from `23/10/2026`, separately retaining the 10 INR fee. The actual page recognition score was 95/100 and was labelled as OCR, not verified field accuracy. Applying retained OCR method, score and source notes.
+- The same receipt as a PNG exercised image decoding/rescaling and OCR, with the same values and uncertainty warning.
+- An AcroForm PDF with widget values returned 750.25 USD and 2026-10-22 from its filled fields, without OCR. This checks data stored in form fields rather than relying solely on flattened page text.
+- Attachment replacement cleared previous suggestions. An eleven-page range was rejected before reading; cancellation cleared results and allowed another read. An encrypted PDF returned an unlocked-copy message with no candidate values and left the read button available.
+
+PDF text, OCR and form-field extraction run in browser workers/canvas using same-origin installed assets. Exact dependency versions/integrity are locked; worker, core and English model paths are explicit, with OCR cache disabled. The server allows only installed reader assets and app files and accepts no document uploads. Applied source notes are exported as evidence notes; full extracted document text remains temporary. Unit tests confirm no original bytes are serialized and reopening resets review/link status and requires the original.
+
+Live local HTTP checks confirmed seven required reader asset routes/MIME types, denied package.json, arbitrary node_modules/source/private-file routes, and rejected POST with 405. `npm audit --omit=dev` reported zero known vulnerabilities on 23 October 2026; this is not an independent security assessment. Final browser smoke check after cancellation changes successfully cancelled/retried scanned-PDF OCR, retained the same 1250.75 INR / 2026-10-23 suggestions and correctly labelled agreement with the entered transaction.
+
+These fixtures establish basic behavior, not general OCR accuracy on customer statements. English printed text, limited page ranges and explicit date/number formats are supported. Complex tables, handwriting, rotated/degraded scans, non-English scripts, inaccessible fonts and XFA may need manual transcription. A page with incomplete text needs the explicit all-pages OCR option. Cross-browser and independent security/accessibility assessments remain outstanding. The older original-blob and optional native-print gates below remain manual; they are separate from extraction.
 
 ## Browser checks with fictional data
 

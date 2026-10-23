@@ -81,6 +81,20 @@
         <label class="wide">Notes / manual transcription<textarea name="notes" maxlength="4000"></textarea></label>
         <label class="wide">Screenshot or PDF (optional, max 10 MB)<input name="attachment" type="file" accept="image/png,image/jpeg,image/webp,application/pdf"></label>
       </div>
+      <fieldset id="attachment-reader">
+        <legend>Read amounts and dates from your attachment</legend>
+        <p>Choose a PDF or screenshot above, then read it locally. Digital PDF text and filled form values are read first; scanned pages use English OCR. Suggestions show page/source text and agreement with the transaction amount/date you entered. You choose what to apply.</p>
+        <div class="grid">
+          <label>First page<input id="reader-start" type="number" min="1" value="1"></label>
+          <label>Last page (up to 10 per read)<input id="reader-end" type="number" min="1" value="3"></label>
+          <label>Numeric date order<select id="reader-date-order"><option value="ask">Show both when ambiguous</option><option value="dmy">Day / month / year</option><option value="mdy">Month / day / year</option></select></label>
+          <label>Number format<select id="reader-number-format"><option value="dot">Decimal point: 1,234.56 or 1,23,456.78</option><option value="comma">Decimal comma: 1.234,56</option></select></label>
+        </div>
+        <label><input id="reader-force" type="checkbox"> Use OCR on every selected page (for scans or incomplete PDF text)</label>
+        <button id="reader-read" type="button">Read attachment locally</button><button id="reader-cancel" type="button" class="secondary" hidden>Cancel reading</button>
+        <p class="hint">No document upload or AI service. Reading can take a minute. OCR can misread digits; it does not verify authenticity. Encrypted PDFs need an unlocked local copy. Handwriting and non-English text may need manual entry.</p>
+        <p id="reader-status" role="status"></p><div id="reader-result"></div>
+      </fieldset>
       <p id="attachment-note" class="hint"></p>
       <button id="evidence-submit">Add evidence</button><button type="button" id="cancel-edit" class="secondary" hidden>Cancel edit</button>
     </form>

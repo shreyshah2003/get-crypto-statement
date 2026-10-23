@@ -6,9 +6,14 @@
   "scripts": {
     "start": "node server.mjs",
     "test": "node --test",
-    "check": "node --check app.js && node --check core.js && node --check casefile.js && node --check demo.js && node --check btc.js && node --check evm.js && node --check amount.js && node --check pdf.js && node --check pdf-container.js && node --check server.mjs"
+    "check": "node --check app.js && node --check core.js && node --check casefile.js && node --check demo.js && node --check btc.js && node --check evm.js && node --check amount.js && node --check pdf.js && node --check pdf-container.js && node --check document-fields.js && node --check document-reader.js && node --check reader-ui.js && node --check server.mjs"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.13.0"
+  },
+  "dependencies": {
+    "@tesseract.js-data/eng": "1.0.0",
+    "pdfjs-dist": "6.4.299",
+    "tesseract.js": "7.0.0"
   }
 }
