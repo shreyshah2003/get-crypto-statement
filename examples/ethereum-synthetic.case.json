@@ -1,0 +1,486 @@
+{
+  "format": "crypto-passport-case",
+  "version": 1,
+  "savedAt": "2026-10-22T07:53:30.112Z",
+  "transaction": {
+    "kind": "crypto_deposit",
+    "title": "SYNTHETIC Ethereum token review",
+    "amount": "1.000001",
+    "asset": "TOKEN",
+    "date": "2025-10-09",
+    "network": "EVM",
+    "txid": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "chainId": "1",
+    "tokenContract": "0x3333333333333333333333333333333333333333",
+    "narrative": "Entirely fabricated offline example for reviewing native/token transfers, failed/pending status and missing decimals. No real funds, identities or provider lookup are represented.",
+    "structure": null
+  },
+  "evidence": [
+    {
+      "label": "SYNTHETIC — Token event",
+      "role": "chain",
+      "amount": "1.000001",
+      "asset": "TOKEN",
+      "date": "2025-10-09",
+      "txid": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "notes": "FABRICATED TEST DATA. No provider request or real transfer occurred. Ownership/source remain unresolved. Selected log:0: 0x1111111111111111111111111111111111111111 → 0x2222222222222222222222222222222222222222. Token contract 0x3333333333333333333333333333333333333333. Ticker is a manual label.  Block date is not payment initiation; ownership and source of funds remain unverified.",
+      "fileName": "",
+      "provenance": "SYNTHETIC offline fixture — no provider lookup",
+      "linkReason": "",
+      "evm": {
+        "version": 1,
+        "network": "ethereum-mainnet",
+        "chainId": "1",
+        "provider": "dRPC",
+        "sourceUrl": "https://eth.drpc.org",
+        "retrievedAt": "2026-10-22T08:00:00.000Z",
+        "acquisition": "case-file-unverified",
+        "transaction": {
+          "hash": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "type": "2",
+          "from": "0x1111111111111111111111111111111111111111",
+          "to": "0x2222222222222222222222222222222222222222",
+          "valueWei": "1000000000000000001",
+          "gasLimit": "100000",
+          "gasPriceWei": "1000000000",
+          "blockHash": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "blockNumber": "100"
+        },
+        "receipt": {
+          "status": "1",
+          "gasUsed": "21000",
+          "effectiveGasPriceWei": "1000000000",
+          "blobGasUsed": null,
+          "blobGasPriceWei": null,
+          "contractAddress": null,
+          "logs": [
+            {
+              "address": "0x3333333333333333333333333333333333333333",
+              "topics": [
+                "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+                "0x0000000000000000000000001111111111111111111111111111111111111111",
+                "0x0000000000000000000000002222222222222222222222222222222222222222"
+              ],
+              "data": "0x00000000000000000000000000000000000000000000000000000000000f4241",
+              "logIndex": "0"
+            }
+          ]
+        },
+        "block": {
+          "hash": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "number": "100",
+          "timestamp": "1760000000"
+        },
+        "tipBlockNumber": "102",
+        "canonicalChecked": true,
+        "confirmations": "3",
+        "state": "succeeded",
+        "fees": {
+          "executionWei": "21000000000000",
+          "blobWei": "0",
+          "totalWei": "21000000000000",
+          "complete": true
+        },
+        "transfers": [
+          {
+            "id": "native",
+            "kind": "native",
+            "from": "0x1111111111111111111111111111111111111111",
+            "to": "0x2222222222222222222222222222222222222222",
+            "contract": null,
+            "rawAmount": "1000000000000000001",
+            "decimals": 18,
+            "amount": "1.000000000000000001",
+            "metadataStatus": "native ETH (18 decimals)"
+          },
+          {
+            "id": "log:0",
+            "kind": "erc20-shaped-event",
+            "logIndex": "0",
+            "contract": "0x3333333333333333333333333333333333333333",
+            "from": "0x1111111111111111111111111111111111111111",
+            "to": "0x2222222222222222222222222222222222222222",
+            "rawAmount": "1000001",
+            "decimals": 6,
+            "amount": "1.000001",
+            "metadataStatus": "provider eth_call decimals at receipt block hash"
+          }
+        ],
+        "tokenMetadata": [
+          {
+            "contract": "0x3333333333333333333333333333333333333333",
+            "decimals": 6,
+            "status": "provider eth_call decimals at receipt block hash"
+          }
+        ],
+        "limitations": [
+          "Provider-reported, non-atomic snapshot; no independent inclusion proof, finality or ownership verification.",
+          "Native values are top-level transaction values only. Internal calls, traces, net balances and token authenticity are not verified.",
+          "ERC-20-shaped events can be emitted by arbitrary contracts. Contract plus chain identify the asset; ticker labels are manual. NFT and ERC-1155 events are not decoded.",
+          "Gas fees use receipt gasUsed × paid effectiveGasPrice, plus blob gas fees where supplied. Missing components stay unknown.",
+          "Decimals are optional provider eth_call metadata at the receipt block hash. Unknown decimals never default to 18."
+        ]
+      },
+      "selectedTransfer": "log:0",
+      "id": "synthetic-evm-1",
+      "review": "unreviewed",
+      "linked": false,
+      "previousLinkReason": "",
+      "originalRequired": false
+    },
+    {
+      "label": "SYNTHETIC — Native transfer",
+      "role": "chain",
+      "amount": "1.000000000000000001",
+      "asset": "ETH",
+      "date": "2025-10-09",
+      "txid": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "notes": "FABRICATED TEST DATA. No provider request or real transfer occurred. Ownership/source remain unresolved. Selected native: 0x1111111111111111111111111111111111111111 → 0x2222222222222222222222222222222222222222.   Block date is not payment initiation; ownership and source of funds remain unverified.",
+      "fileName": "",
+      "provenance": "SYNTHETIC offline fixture — no provider lookup",
+      "linkReason": "",
+      "evm": {
+        "version": 1,
+        "network": "ethereum-mainnet",
+        "chainId": "1",
+        "provider": "dRPC",
+        "sourceUrl": "https://eth.drpc.org",
+        "retrievedAt": "2026-10-22T08:00:00.000Z",
+        "acquisition": "case-file-unverified",
+        "transaction": {
+          "hash": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "type": "2",
+          "from": "0x1111111111111111111111111111111111111111",
+          "to": "0x2222222222222222222222222222222222222222",
+          "valueWei": "1000000000000000001",
+          "gasLimit": "100000",
+          "gasPriceWei": "1000000000",
+          "blockHash": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "blockNumber": "100"
+        },
+        "receipt": {
+          "status": "1",
+          "gasUsed": "21000",
+          "effectiveGasPriceWei": "1000000000",
+          "blobGasUsed": null,
+          "blobGasPriceWei": null,
+          "contractAddress": null,
+          "logs": [
+            {
+              "address": "0x3333333333333333333333333333333333333333",
+              "topics": [
+                "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+                "0x0000000000000000000000001111111111111111111111111111111111111111",
+                "0x0000000000000000000000002222222222222222222222222222222222222222"
+              ],
+              "data": "0x00000000000000000000000000000000000000000000000000000000000f4241",
+              "logIndex": "0"
+            }
+          ]
+        },
+        "block": {
+          "hash": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "number": "100",
+          "timestamp": "1760000000"
+        },
+        "tipBlockNumber": "102",
+        "canonicalChecked": true,
+        "confirmations": "3",
+        "state": "succeeded",
+        "fees": {
+          "executionWei": "21000000000000",
+          "blobWei": "0",
+          "totalWei": "21000000000000",
+          "complete": true
+        },
+        "transfers": [
+          {
+            "id": "native",
+            "kind": "native",
+            "from": "0x1111111111111111111111111111111111111111",
+            "to": "0x2222222222222222222222222222222222222222",
+            "contract": null,
+            "rawAmount": "1000000000000000001",
+            "decimals": 18,
+            "amount": "1.000000000000000001",
+            "metadataStatus": "native ETH (18 decimals)"
+          },
+          {
+            "id": "log:0",
+            "kind": "erc20-shaped-event",
+            "logIndex": "0",
+            "contract": "0x3333333333333333333333333333333333333333",
+            "from": "0x1111111111111111111111111111111111111111",
+            "to": "0x2222222222222222222222222222222222222222",
+            "rawAmount": "1000001",
+            "decimals": 6,
+            "amount": "1.000001",
+            "metadataStatus": "provider eth_call decimals at receipt block hash"
+          }
+        ],
+        "tokenMetadata": [
+          {
+            "contract": "0x3333333333333333333333333333333333333333",
+            "decimals": 6,
+            "status": "provider eth_call decimals at receipt block hash"
+          }
+        ],
+        "limitations": [
+          "Provider-reported, non-atomic snapshot; no independent inclusion proof, finality or ownership verification.",
+          "Native values are top-level transaction values only. Internal calls, traces, net balances and token authenticity are not verified.",
+          "ERC-20-shaped events can be emitted by arbitrary contracts. Contract plus chain identify the asset; ticker labels are manual. NFT and ERC-1155 events are not decoded.",
+          "Gas fees use receipt gasUsed × paid effectiveGasPrice, plus blob gas fees where supplied. Missing components stay unknown.",
+          "Decimals are optional provider eth_call metadata at the receipt block hash. Unknown decimals never default to 18."
+        ]
+      },
+      "selectedTransfer": "native",
+      "id": "synthetic-evm-2",
+      "review": "unreviewed",
+      "linked": false,
+      "previousLinkReason": "",
+      "originalRequired": false
+    },
+    {
+      "label": "SYNTHETIC — Failed transaction",
+      "role": "chain",
+      "amount": "",
+      "asset": "ETH",
+      "date": "2025-10-09",
+      "txid": "0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "notes": "FABRICATED TEST DATA. No provider request or real transfer occurred. Ownership/source remain unresolved. Status-only snapshot; no completed transfer is claimed. Attempted top-level value: 1000000000000000001 wei.",
+      "fileName": "",
+      "provenance": "SYNTHETIC offline fixture — no provider lookup",
+      "linkReason": "",
+      "evm": {
+        "version": 1,
+        "network": "ethereum-mainnet",
+        "chainId": "1",
+        "provider": "dRPC",
+        "sourceUrl": "https://eth.drpc.org",
+        "retrievedAt": "2026-10-22T08:00:00.000Z",
+        "acquisition": "case-file-unverified",
+        "transaction": {
+          "hash": "0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "type": "2",
+          "from": "0x1111111111111111111111111111111111111111",
+          "to": "0x2222222222222222222222222222222222222222",
+          "valueWei": "1000000000000000001",
+          "gasLimit": "100000",
+          "gasPriceWei": "1000000000",
+          "blockHash": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "blockNumber": "100"
+        },
+        "receipt": {
+          "status": "0",
+          "gasUsed": "21000",
+          "effectiveGasPriceWei": "1000000000",
+          "blobGasUsed": null,
+          "blobGasPriceWei": null,
+          "contractAddress": null,
+          "logs": []
+        },
+        "block": {
+          "hash": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "number": "100",
+          "timestamp": "1760000000"
+        },
+        "tipBlockNumber": "102",
+        "canonicalChecked": true,
+        "confirmations": "3",
+        "state": "failed",
+        "fees": {
+          "executionWei": "21000000000000",
+          "blobWei": "0",
+          "totalWei": "21000000000000",
+          "complete": true
+        },
+        "transfers": [],
+        "tokenMetadata": [],
+        "limitations": [
+          "Provider-reported, non-atomic snapshot; no independent inclusion proof, finality or ownership verification.",
+          "Native values are top-level transaction values only. Internal calls, traces, net balances and token authenticity are not verified.",
+          "ERC-20-shaped events can be emitted by arbitrary contracts. Contract plus chain identify the asset; ticker labels are manual. NFT and ERC-1155 events are not decoded.",
+          "Gas fees use receipt gasUsed × paid effectiveGasPrice, plus blob gas fees where supplied. Missing components stay unknown.",
+          "Decimals are optional provider eth_call metadata at the receipt block hash. Unknown decimals never default to 18."
+        ]
+      },
+      "selectedTransfer": "status",
+      "id": "synthetic-evm-3",
+      "review": "unreviewed",
+      "linked": false,
+      "previousLinkReason": "",
+      "originalRequired": false
+    },
+    {
+      "label": "SYNTHETIC — Pending transaction",
+      "role": "chain",
+      "amount": "",
+      "asset": "ETH",
+      "date": "",
+      "txid": "0xdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "notes": "FABRICATED TEST DATA. No provider request or real transfer occurred. Ownership/source remain unresolved. Status-only snapshot; no completed transfer is claimed. Attempted top-level value: 1000000000000000001 wei.",
+      "fileName": "",
+      "provenance": "SYNTHETIC offline fixture — no provider lookup",
+      "linkReason": "",
+      "evm": {
+        "version": 1,
+        "network": "ethereum-mainnet",
+        "chainId": "1",
+        "provider": "dRPC",
+        "sourceUrl": "https://eth.drpc.org",
+        "retrievedAt": "2026-10-22T08:00:00.000Z",
+        "acquisition": "case-file-unverified",
+        "transaction": {
+          "hash": "0xdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "type": "2",
+          "from": "0x1111111111111111111111111111111111111111",
+          "to": "0x2222222222222222222222222222222222222222",
+          "valueWei": "1000000000000000001",
+          "gasLimit": "100000",
+          "gasPriceWei": "1000000000",
+          "blockHash": null,
+          "blockNumber": null
+        },
+        "receipt": null,
+        "block": null,
+        "tipBlockNumber": "102",
+        "canonicalChecked": false,
+        "confirmations": null,
+        "state": "pending",
+        "fees": {
+          "executionWei": null,
+          "blobWei": null,
+          "totalWei": null,
+          "complete": false
+        },
+        "transfers": [],
+        "tokenMetadata": [],
+        "limitations": [
+          "Provider-reported, non-atomic snapshot; no independent inclusion proof, finality or ownership verification.",
+          "Native values are top-level transaction values only. Internal calls, traces, net balances and token authenticity are not verified.",
+          "ERC-20-shaped events can be emitted by arbitrary contracts. Contract plus chain identify the asset; ticker labels are manual. NFT and ERC-1155 events are not decoded.",
+          "Gas fees use receipt gasUsed × paid effectiveGasPrice, plus blob gas fees where supplied. Missing components stay unknown.",
+          "Decimals are optional provider eth_call metadata at the receipt block hash. Unknown decimals never default to 18."
+        ]
+      },
+      "selectedTransfer": "status",
+      "id": "synthetic-evm-4",
+      "review": "unreviewed",
+      "linked": false,
+      "previousLinkReason": "",
+      "originalRequired": false
+    },
+    {
+      "label": "SYNTHETIC — Unknown token decimals",
+      "role": "chain",
+      "amount": "",
+      "asset": "TOKEN",
+      "date": "2025-10-09",
+      "txid": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "notes": "FABRICATED TEST DATA. No provider request or real transfer occurred. Ownership/source remain unresolved. Selected log:0: 0x1111111111111111111111111111111111111111 → 0x2222222222222222222222222222222222222222. Token contract 0x3333333333333333333333333333333333333333. Ticker is a manual label. Decimals unknown: raw amount 1000001; no scaled amount inferred. Block date is not payment initiation; ownership and source of funds remain unverified.",
+      "fileName": "",
+      "provenance": "SYNTHETIC offline fixture — no provider lookup",
+      "linkReason": "",
+      "evm": {
+        "version": 1,
+        "network": "ethereum-mainnet",
+        "chainId": "1",
+        "provider": "dRPC",
+        "sourceUrl": "https://eth.drpc.org",
+        "retrievedAt": "2026-10-22T08:00:00.000Z",
+        "acquisition": "case-file-unverified",
+        "transaction": {
+          "hash": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "type": "2",
+          "from": "0x1111111111111111111111111111111111111111",
+          "to": "0x2222222222222222222222222222222222222222",
+          "valueWei": "1000000000000000001",
+          "gasLimit": "100000",
+          "gasPriceWei": "1000000000",
+          "blockHash": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "blockNumber": "100"
+        },
+        "receipt": {
+          "status": "1",
+          "gasUsed": "21000",
+          "effectiveGasPriceWei": "1000000000",
+          "blobGasUsed": null,
+          "blobGasPriceWei": null,
+          "contractAddress": null,
+          "logs": [
+            {
+              "address": "0x3333333333333333333333333333333333333333",
+              "topics": [
+                "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+                "0x0000000000000000000000001111111111111111111111111111111111111111",
+                "0x0000000000000000000000002222222222222222222222222222222222222222"
+              ],
+              "data": "0x00000000000000000000000000000000000000000000000000000000000f4241",
+              "logIndex": "0"
+            }
+          ]
+        },
+        "block": {
+          "hash": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "number": "100",
+          "timestamp": "1760000000"
+        },
+        "tipBlockNumber": "102",
+        "canonicalChecked": true,
+        "confirmations": "3",
+        "state": "succeeded",
+        "fees": {
+          "executionWei": "21000000000000",
+          "blobWei": "0",
+          "totalWei": "21000000000000",
+          "complete": true
+        },
+        "transfers": [
+          {
+            "id": "native",
+            "kind": "native",
+            "from": "0x1111111111111111111111111111111111111111",
+            "to": "0x2222222222222222222222222222222222222222",
+            "contract": null,
+            "rawAmount": "1000000000000000001",
+            "decimals": 18,
+            "amount": "1.000000000000000001",
+            "metadataStatus": "native ETH (18 decimals)"
+          },
+          {
+            "id": "log:0",
+            "kind": "erc20-shaped-event",
+            "logIndex": "0",
+            "contract": "0x3333333333333333333333333333333333333333",
+            "from": "0x1111111111111111111111111111111111111111",
+            "to": "0x2222222222222222222222222222222222222222",
+            "rawAmount": "1000001",
+            "decimals": null,
+            "amount": null,
+            "metadataStatus": "decimals unavailable; raw amount only"
+          }
+        ],
+        "tokenMetadata": [
+          {
+            "contract": "0x3333333333333333333333333333333333333333",
+            "decimals": null,
+            "status": "decimals unavailable; raw amount only"
+          }
+        ],
+        "limitations": [
+          "Provider-reported, non-atomic snapshot; no independent inclusion proof, finality or ownership verification.",
+          "Native values are top-level transaction values only. Internal calls, traces, net balances and token authenticity are not verified.",
+          "ERC-20-shaped events can be emitted by arbitrary contracts. Contract plus chain identify the asset; ticker labels are manual. NFT and ERC-1155 events are not decoded.",
+          "Gas fees use receipt gasUsed × paid effectiveGasPrice, plus blob gas fees where supplied. Missing components stay unknown.",
+          "Decimals are optional provider eth_call metadata at the receipt block hash. Unknown decimals never default to 18."
+        ]
+      },
+      "selectedTransfer": "log:0",
+      "id": "synthetic-evm-5",
+      "review": "unreviewed",
+      "linked": false,
+      "previousLinkReason": "",
+      "originalRequired": false
+    }
+  ]
+}

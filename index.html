@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Crypto Passport</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<header><a href="/" class="brand">◈ Crypto Passport</a><span>PRIVATE WORKSPACE · MVP</span></header>
+<main>
+  <section class="intro">
+    <p class="eyebrow">YOUR TRANSACTION. A CLEARER STORY.</p>
+    <h1>Connect the evidence.<br>Understand the gaps.</h1>
+    <p>Start with the transaction you need to explain. Organize its source, review supporting records, and prepare a transparent evidence report.</p>
+    <div class="notice">Local session only · No uploads or automatic verification · Save a case before closing</div>
+    <div class="actions"><button id="save-case">Save case file</button><button id="demo" class="secondary">Load synthetic walkthrough</button></div>
+    <label>Reopen saved case (up to 5 MB)<input id="open-case" type="file" accept=".json,application/json"></label>
+    <p class="hint">Case files contain entered personal data but no original attachments. Store them privately. Reopening requires fresh review and reattachment of originals. Start with an empty session.</p>
+    <p id="session-status" role="status"></p><div id="case-download"></div>
+  </section>
+  <nav aria-label="Workflow"><a href="#transaction">01 Transaction</a><a href="#evidence">02 Evidence & review</a><a href="#report">03 Passport report</a></nav>
+  <section id="transaction" class="card">
+    <h2>01 / What are you explaining?</h2>
+    <form id="case-form">
+      <div class="grid">
+        <label>Case type<select name="kind"><option value="fiat_deposit">Fiat deposit</option><option value="crypto_deposit">Crypto deposit</option><option value="cash_out">Crypto cash-out</option></select></label>
+        <label>Case title<input name="title" required maxlength="120" placeholder="Deposit to my bank account"></label>
+        <label>Amount<input name="amount" required inputmode="decimal" placeholder="50000.00"></label>
+        <label>Asset / currency<input name="asset" required maxlength="12" placeholder="USD"></label>
+        <label>Transaction date<input name="date" type="date" required></label>
+        <label>Network<select name="network"><option value="none">Off-chain / fiat</option><option value="BTC">Bitcoin</option><option value="EVM">EVM</option></select></label>
+        <label>Transaction ID / hash<input name="txid" maxlength="66"></label>
+        <label id="chain-id-label" hidden>EVM chain ID<input name="chainId" placeholder="1"></label>
+        <label id="token-contract-label" hidden>EVM token contract (blank for native ETH)<input name="tokenContract" maxlength="42" placeholder="0x…"></label>
+        <label class="wide">Source narrative<textarea name="narrative" maxlength="4000" placeholder="Explain how the funds were obtained, including any conversion or intermediary."></textarea></label>
+      </div>
+      <fieldset id="chain-details" hidden>
+        <legend>Optional transfer details — manually entered</legend>
+        <p class="hint">These fields describe a record; they do not retrieve or verify a blockchain transaction. BTC output addresses are recorded as supplied.</p>
+        <label><input id="include-details" type="checkbox"> Include transfer details</label>
+        <div id="btc-details" hidden>
+          <h3>Bitcoin inputs</h3><div id="btc-inputs"></div><button type="button" id="add-input" class="secondary">Add BTC input</button>
+          <h3>Bitcoin outputs</h3><div id="btc-outputs"></div><button type="button" id="add-output" class="secondary">Add BTC output</button>
+        </div>
+        <div id="evm-details" hidden>
+          <div class="grid"><label>Sender address<input id="evm-from" maxlength="42"></label><label>Recipient address<input id="evm-to" maxlength="42"></label><label>Native value (whole wei)<input id="evm-value" inputmode="numeric" value="0" maxlength="80"></label></div>
+          <h3>Token transfers (optional)</h3><div id="evm-tokens"></div><button type="button" id="add-token" class="secondary">Add token transfer</button>
+        </div>
+      </fieldset>
+      <button>Save transaction</button>
+    </form>
+    <p id="case-status" role="status"></p>
+  </section>
+  <section id="evidence" class="card">
+    <h2>02 / Build the evidence trail</h2>
+    <fieldset id="btc-lookup">
+      <legend>Retrieve a Bitcoin mainnet transaction</legend>
+      <p>Fetch a provider snapshot, then choose a specific output to add as unreviewed evidence. The case amount and transaction are never overwritten.</p>
+      <label>Bitcoin transaction ID to retrieve<input id="btc-lookup-id" maxlength="64" autocomplete="off"></label>
+      <label><input id="btc-consent" type="checkbox"> I approve sending this transaction ID and my IP address to mempool.space.</label>
+      <p class="hint">Only the ID is sent in the request URL. The provider also sees connection metadata. No case narrative, documents or other evidence are sent. No automatic refresh. Mainnet only; ownership and source of funds remain unverified.</p>
+      <button id="btc-fetch" type="button">Fetch from mempool.space</button>
+      <p id="btc-status" role="status"></p><div id="btc-result"></div>
+    </fieldset>
+    <p>Add bank or exchange CSV records, screenshots, or manual evidence. Review each original and enter only what it supports. Editing a record clears its review and link.</p>
+    <fieldset id="evm-lookup">
+      <legend>Retrieve an Ethereum transaction</legend>
+      <label>Lookup network<select id="evm-lookup-chain"><option value="1">Ethereum mainnet — chain ID 1</option></select></label>
+      <label>Ethereum transaction hash to retrieve<input id="evm-lookup-id" maxlength="66" autocomplete="off"></label>
+      <label><input id="evm-consent" type="checkbox"> I approve sending this hash, related contract/block identifiers and my IP metadata to dRPC.</label>
+      <p class="hint">Read-only JSON-RPC calls retrieve the transaction, receipt, block and optional token decimals. No wallet connection, signing, document upload or automatic refresh. Only Ethereum mainnet is supported. Internal transfers/traces, token authenticity and ownership are not verified.</p>
+      <button id="evm-fetch" type="button">Fetch from dRPC</button>
+      <p id="evm-status" role="status"></p><div id="evm-result"></div>
+    </fieldset>
+    <label>CSV source<select id="csv-role"><option value="bank">Bank record</option><option value="exchange">Exchange record</option></select></label>
+    <label>Import CSV (up to 2 MB, 5,000 rows)<input id="csv" type="file" accept=".csv,text/csv"></label>
+    <p class="hint">Headers: date, amount, asset. Optional: reference, txid. Positive amounts; explain direction, fees and conversions in notes.</p>
+    <form id="evidence-form">
+      <h3 id="evidence-heading">Add evidence</h3>
+      <div class="grid">
+        <label>Evidence role<select name="role"><option value="bank">Bank record</option><option value="exchange">Exchange record</option><option value="chain">Blockchain record</option><option value="ownership">Ownership evidence</option><option value="source">Source of funds</option></select></label>
+        <label>Evidence label<input name="label" required maxlength="160"></label>
+        <label>Amount<input name="amount" inputmode="decimal"></label><label>Asset<input name="asset" maxlength="12"></label>
+        <label>Date<input name="date" type="date"></label><label>Transaction ID<input name="txid" maxlength="66"></label>
+        <label>Reference / UTR / transfer ID<input name="reference" maxlength="160"></label>
+        <label class="wide">Notes / manual transcription<textarea name="notes" maxlength="4000"></textarea></label>
+        <label class="wide">Screenshot or PDF (optional, max 10 MB)<input name="attachment" type="file" accept="image/png,image/jpeg,image/webp,application/pdf"></label>
+      </div>
+      <fieldset id="attachment-reader">
+        <legend>Read amounts and dates from your attachment</legend>
+        <p>PDFs and screenshots are read automatically on this device when selected. PDF text and form fields are read first; missing fields trigger English OCR for scanned content. Suggestions include amounts, dates, hashes and references with page/source text. You choose what to apply.</p>
+        <div class="grid">
+          <label>First page<input id="reader-start" type="number" min="1" value="1"></label>
+          <label>Last page (up to 10 per read)<input id="reader-end" type="number" min="1" value="3"></label>
+          <label>Numeric date order<select id="reader-date-order"><option value="ask">Show both when ambiguous</option><option value="dmy">Day / month / year</option><option value="mdy">Month / day / year</option></select></label>
+          <label>Number format<select id="reader-number-format"><option value="dot">Decimal point: 1,234.56 or 1,23,456.78</option><option value="comma">Decimal comma: 1.234,56</option></select></label>
+          <label>Two-digit years<select id="reader-century"><option value="">Do not guess the century</option><option value="2000">2000–2099 (explicit choice)</option><option value="1900">1900–1999 (explicit choice)</option></select></label>
+        </div>
+        <label><input id="reader-auto" type="checkbox" checked> Read selected attachments automatically on this device</label>
+        <label><input id="reader-force" type="checkbox"> Use OCR on every selected page (for scans or incomplete PDF text)</label>
+        <button id="reader-read" type="button">Read attachment locally</button><button id="reader-cancel" type="button" class="secondary" hidden>Cancel reading</button>
+        <p class="hint">No document upload or AI service. Reading can take a minute. OCR can misread digits; it does not verify authenticity. Encrypted PDFs need an unlocked local copy. Handwriting and non-English text may need manual entry.</p>
+        <p id="reader-status" role="status"></p><div id="reader-result"></div>
+      </fieldset>
+      <p id="attachment-note" class="hint"></p>
+      <button id="evidence-submit">Add evidence</button><button type="button" id="cancel-edit" class="secondary" hidden>Cancel edit</button>
+    </form>
+    <p id="evidence-status" role="status"></p><div id="records"></div>
+    <div id="evidence-map"></div>
+  </section>
+  <section id="report" class="card">
+    <h2>03 / Your passport report</h2><div id="gaps"></div>
+    <div class="actions"><button id="preview">Refresh preview</button><button id="json">Export report JSON</button><button id="pdf">Download report PDF</button><button id="print">Print / save PDF</button><button id="reset" class="secondary">Clear session</button></div>
+    <p id="export-status" role="status" tabindex="-1"></p>
+    <div id="export-recovery" class="actions" hidden>
+      <button id="export-go-transaction" class="secondary" hidden>Go to transaction</button>
+      <button id="export-go-evidence" class="secondary" hidden>Go to evidence draft</button>
+      <button id="export-discard-evidence" class="secondary" hidden>Discard unsaved evidence</button>
+    </div>
+    <div id="report-downloads" class="actions" aria-label="Prepared report files"></div>
+    <p class="hint">When a file is ready, its Save link stays here. If your browser does not start the download automatically, click that link. Save links are cleared when the case changes.</p>
+    <p class="hint">Downloaded PDF pages are rendered locally as images, including Unicode text. Use JSON for searchable, machine-readable data. No original attachments are embedded.</p>
+    <article id="report-preview"><p>Save a transaction to prepare your report.</p></article>
+  </section>
+</main>
+<footer>Evidence organization, with uncertainty preserved. No financial or compliance certification.</footer>
+<script type="module" src="/app.js"></script>
+</body></html>
