@@ -2,11 +2,11 @@
 
 ## Current release — 28 October 2026
 
-Published app: https://crypto-passport.lovable.app. Verified owner: info.shrey.shah@gmail.com (workspace 5dd488614e368ef9d9d5, project 440620f0-1e8c-41a5-9c41-999e6860db28). Runtime source commit in the user repository: 703ccc13da04dd8258e193b07df723ae6bc18014; hosting wrapper commit: b4680fbc0573c97bb447b7b6b27a11739909cefd. The source branch remains codex/crypto-passport-mvp; draft PR #1 is unmerged.
+Published app: https://crypto-passport.lovable.app. Verified owner: info.shrey.shah@gmail.com (workspace 5dd488614e368ef9d9d5, project 440620f0-1e8c-41a5-9c41-999e6860db28). Runtime source commit in the user repository: d4274073552dc3e83025bfac7e766a9ff1a538af; hosting wrapper commit: 02c156f143ce9ae3c65656fb6d4fee21a1d29b19. The source branch remains codex/crypto-passport-mvp; draft PR #1 is unmerged.
 
 The wrapper copies 15 runtime files from passport-source into public, renaming index.html to passport.html. Include evidence-map.js in both source/build allowlists when updating. The English model exceeds Lovable's per-file limit, so preparation splits it into eng.part0 and eng.part1, and a fixed same-origin GET route joins the original bytes at /vendor/tessdata/eng.traineddata.gz. The complete published model hash and JS/CSS hashes were verified. Preserve this route and the pinned dependency versions.
 
-The latest source copy/build update used 1.3 Lovable credits; the initial hosting adapter used 1.9. Feature work is implemented outside Lovable. No database or document storage was enabled. Live synthetic PDF, image, comparison and JSON checks are recorded in VALIDATION.md.
+The latest download-fix source copy/build update used 1.5 Lovable credits; the prior OCR/comparison update used 1.3 and the initial hosting adapter used 1.9. Feature work is implemented outside Lovable. No database or document storage was enabled. Live synthetic file-reading, comparison and PDF/JSON download/retry checks are recorded in VALIDATION.md.
 
 ## Build the browser assets
 
