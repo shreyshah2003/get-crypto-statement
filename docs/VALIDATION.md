@@ -1,7 +1,5 @@
 # MVP validation — updated 28 October 2026
 
-## Automated
-
 ## File-reading regression and cross-evidence comparison — 28 October 2026
 
 The published reader was reproduced missing the scanned body of a PDF with a readable digital header: it returned the header's generated-on date but zero amounts. With automatic OCR fallback, the same labelled fabricated fixture returned the actual scanned 1250.75 INR transaction amount, separate 10 INR fee, 2026-10-23 transaction date, header date and source UTR. These remained separate explicit choices with PDF/OCR page/line provenance; no target value was invented. File selection automatically started reading, and saving selected fields left evidence unreviewed/unlinked.
@@ -10,7 +8,13 @@ A separate fabricated CSV record with the same UTR/amount/date produced a cross-
 
 The reader now distinguishes page OCR failures, no readable text and readable text without supported fields. Corrected or pasted source text is labelled Manual transcript. A page's OCR failure keeps other readable pages; these diagnostics improve recoverability without asserting that every possible document layout will extract correctly. The test documents contain no real funds, identities or customer data.
 
-## Automated suite
+## Published verification — 28 October 2026
+
+The update is live at https://crypto-passport.lovable.app in the verified info.shrey.shah@gmail.com account, project 440620f0-1e8c-41a5-9c41-999e6860db28. GitHub runtime source commit: 703ccc13da04dd8258e193b07df723ae6bc18014. Hosted integration commit: b4680fbc0573c97bb447b7b6b27a11739909cefd. All 15 hosted source files were independently compared with the local/GitHub source. Published JS/CSS hashes, reader asset MIME types, complete English-model SHA-256, root redirect and HTML policy passed. The database remains disabled. The minimal hosting source update consumed 1.3 Lovable credits.
+
+Fresh live-browser tests reproduced the mixed-PDF result described above, including explicit OCR amount/date and PDF-text UTR application with source notes. PNG OCR returned the same transaction and separate fee. PDF/CSV comparisons progressed from review required to candidate only after review; unresolved bank/source gaps stayed open. Downloaded JSON retained three records, three comparison suggestions and zero linked records, without original bytes. A locked PDF returned the unlocked-copy message with reading enabled afterward. No browser errors/warnings were captured. Only visibly labelled fabricated fixtures were used.
+
+## Automated packaging
 
 Hosting preparation: `npm run build` packaged 223 explicitly selected app/PDF/OCR assets. `npm run check:build` verified all asset sizes and SHA-256 hashes, same-origin worker/model paths, generated HTML policy, and absence of unexpected/private/source files. This verifies packaging; hosted preview/production checks must still run against the target Lovable project.
 
