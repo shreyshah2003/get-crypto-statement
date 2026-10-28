@@ -1,5 +1,11 @@
 # MVP validation — updated 28 October 2026
 
+## Download recovery regression — 28 October 2026
+
+Reproduced both export buttons failing after changing only the date-reading preference on the old live app: the entire evidence form's change listener marked this unsaved, requireSaved blocked both formats, and the message was only in the top session section. With the fix, reader-only settings no longer mark saved evidence dirty. Errors/progress appear beside report buttons, and real pending evidence has visible go-to/discard recovery. Discarding the fabricated draft retained all eight saved example records. A real unsaved transaction still blocked export with transaction-specific guidance. Changing case/form data removed prepared links.
+
+Local browser checks downloaded and parsed report JSON and generated a downloadable PDF after reader-setting changes and draft recovery. Prepared files have attached Save links with browser-managed filenames/MIME types, held until replacement or case changes instead of one-second/30-second revocation timers. PDF results are rejected if the case changes during preparation. The existing 54 behavior tests, syntax checks and 223-asset static packaging checks pass. Live verification of this download update follows publication; no customer case was inspected or altered.
+
 ## File-reading regression and cross-evidence comparison — 28 October 2026
 
 The published reader was reproduced missing the scanned body of a PDF with a readable digital header: it returned the header's generated-on date but zero amounts. With automatic OCR fallback, the same labelled fabricated fixture returned the actual scanned 1250.75 INR transaction amount, separate 10 INR fee, 2026-10-23 transaction date, header date and source UTR. These remained separate explicit choices with PDF/OCR page/line provenance; no target value was invented. File selection automatically started reading, and saving selected fields left evidence unreviewed/unlinked.

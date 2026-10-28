@@ -9,4 +9,5 @@ legend{font-size:14px;font-weight:650}
 input[type=checkbox]{align-self:flex-start}
 .record h3{margin-top:0}h4{margin-bottom:8px}
 #reader-result{overflow-wrap:anywhere}#reader-result label{margin-top:16px}#reader-result select{width:100%;max-width:100%}#reader-result pre{max-height:380px;overflow:auto;background:#f4f6f2;padding:12px}#attachment-reader p{font-weight:400}
+.download-link{display:inline-block;margin-top:12px;border:1px solid #235a46;border-radius:7px;padding:12px 19px;color:#173b37;background:#e6eee1;font-size:14px;font-weight:650;text-decoration:none}.download-link:hover{background:#d6e5ce}#export-status:empty{display:none}#export-status{padding:12px;background:#fff4d8;border-radius:7px}#export-recovery button{margin-top:0}button:disabled{cursor:wait;opacity:.65}
 @media print{h2,h3,h4{break-after:avoid}p,pre{orphans:3;widows:3}.record{break-inside:avoid}a{color:inherit}#report-preview{font-size:11px;line-height:1.4}#report-preview p{margin:7px 0}}

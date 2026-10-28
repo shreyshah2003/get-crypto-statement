@@ -12,7 +12,7 @@
     <div class="actions"><button id="save-case">Save case file</button><button id="demo" class="secondary">Load synthetic walkthrough</button></div>
     <label>Reopen saved case (up to 5 MB)<input id="open-case" type="file" accept=".json,application/json"></label>
     <p class="hint">Case files contain entered personal data but no original attachments. Store them privately. Reopening requires fresh review and reattachment of originals. Start with an empty session.</p>
-    <p id="session-status" role="status"></p>
+    <p id="session-status" role="status"></p><div id="case-download"></div>
   </section>
   <nav aria-label="Workflow"><a href="#transaction">01 Transaction</a><a href="#evidence">02 Evidence & review</a><a href="#report">03 Passport report</a></nav>
   <section id="transaction" class="card">
@@ -107,6 +107,14 @@
   <section id="report" class="card">
     <h2>03 / Your passport report</h2><div id="gaps"></div>
     <div class="actions"><button id="preview">Refresh preview</button><button id="json">Export report JSON</button><button id="pdf">Download report PDF</button><button id="print">Print / save PDF</button><button id="reset" class="secondary">Clear session</button></div>
+    <p id="export-status" role="status" tabindex="-1"></p>
+    <div id="export-recovery" class="actions" hidden>
+      <button id="export-go-transaction" class="secondary" hidden>Go to transaction</button>
+      <button id="export-go-evidence" class="secondary" hidden>Go to evidence draft</button>
+      <button id="export-discard-evidence" class="secondary" hidden>Discard unsaved evidence</button>
+    </div>
+    <div id="report-downloads" class="actions" aria-label="Prepared report files"></div>
+    <p class="hint">When a file is ready, its Save link stays here. If your browser does not start the download automatically, click that link. Save links are cleared when the case changes.</p>
     <p class="hint">Downloaded PDF pages are rendered locally as images, including Unicode text. Use JSON for searchable, machine-readable data. No original attachments are embedded.</p>
     <article id="report-preview"><p>Save a transaction to prepare your report.</p></article>
   </section>
