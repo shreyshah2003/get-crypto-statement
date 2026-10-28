@@ -15,6 +15,10 @@ Node.js 22.13+: run `npm ci`, then `npm start` and open http://127.0.0.1:5173 in
 
 ## Read a PDF or screenshot locally
 
+Update, 28 October: new attachments now start reading automatically; disable the automatic-read checkbox to use the button instead. PDFs fall back to OCR when text is damaged or lacks amount/date candidates, including digital headers over scanned bodies. Failed OCR on a page preserves other readable results. Diagnostics show read-character counts, candidate counts and page failures. Corrected or pasted text is tagged **Manual transcript** and never presented as OCR. Hashes and labelled references/UTRs are selectable alongside amounts/dates. Missing/generic MIME types use supported original extensions.
+
+The explicit century selector enables numeric two-digit years without guessing. Statement-table rows, adjacent currency codes, space-grouped thousands and split PDF glyphs are handled. Currency inherited from a unique explicit header retains that header context in source notes. All original limits and human-review requirements below still apply. Automatic OCR fallback removes the need to force OCR for many mixed text/scan PDFs; the force option remains available.
+
 Select an attachment under Add evidence (or Edit evidence to use an existing original), then press **Read attachment locally**. PDF text and AcroForm widget values are read directly; pages with very little text are rendered locally for English OCR. For scans with an existing header/text layer, choose **Use OCR on every selected page**. PNG/JPEG/WebP screenshots also use local OCR. No attachment bytes, extracted text or document filename are sent to a document service.
 
 The default range is pages 1–3, capped to the document's length. Each read accepts up to 10 pages and 10 MB; partial ranges are labelled explicitly, so relevant records on unread pages are not implied absent. Select another range for longer statements. Reading has a three-minute deadline, cancellation, an 8-million-pixel render cap per page and a 300,000-character extracted-text cap. An unlocked copy is needed for encrypted PDFs. English printed text is supported; handwriting, poor scans, complex layouts, non-English scripts and XFA forms can need manual entry.
@@ -28,6 +32,14 @@ Select amount and/or date explicitly, then press **Use selected values in eviden
 Implementation references: [PDF.js](https://mozilla.github.io/pdf.js/), [Tesseract.js API](https://github.com/naptha/tesseract.js/blob/master/docs/api.md), [local asset paths](https://github.com/naptha/tesseract.js/blob/master/docs/local-installation.md). Library licenses remain in installed npm packages; exact dependency versions and integrity hashes are in package-lock.json.
 
 For optional developer reproduction, `scripts/make-reader-fixtures.py` uses Python Pillow, reportlab and pypdf to create labelled fabricated digital, scanned, form and encrypted PDFs plus a screenshot under the ignored `scripts/reader-fixtures/` directory. Those Python packages are not needed to run the app. Keep real customer documents out of fixtures and Git history.
+
+## Compare across evidence
+
+The evidence section compares recorded transaction hashes, references/UTRs and exact asset/amount/date values across CSV, document, manual and provider records. Each suggestion names the two records/files, agreement signals, missing fields, conflicts and review requirements. Source snippets remain in record notes. CSV references now survive saving/reopening rather than being used only as labels.
+
+Shared identifiers can surface records despite amount/date/asset differences; those differences remain explicit. Without a shared identifier, identical asset/amount within three days is weak evidence because unrelated/repeated payments can agree. Conflicting hashes or token contracts/chains are flagged. Same-filename duplicates are not independent corroboration. Missing originals and unreviewed records require review.
+
+Comparisons never connect records, verify funds or close gaps. Inspect originals, then use each record's manual Link to transaction action with an explanation. JSON/PDF reports retain the comparison reasons and uncertainty. This is a first comparison layer, not a complete funds-flow graph or inferred conversion trail. Limits are explicit: 5,000 records, 200 per repeated-value group, 20,000 pair probes and 120 ranked results. Partial groups and omitted results produce warnings.
 
 ## Bitcoin mainnet lookup
 

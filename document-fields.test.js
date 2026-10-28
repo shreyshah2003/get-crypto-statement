@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {amountValue,dateValues,suggestFields,textLines} from './document-fields.js';
-import {validateRead,readAttachment} from './document-reader.js';
+import {validateRead,readAttachment,needsOCR,attachmentType} from './document-reader.js';
 import {cleanTransaction,cleanEvidence,saveCase,openCase} from './casefile.js';
 import {report} from './core.js';
 import {reportBlocks} from './pdf.js';
@@ -50,4 +50,30 @@ test('applied source notes survive reports and case reopening without importing 
   const evidence={...cleanEvidence({label:'Synthetic',role:'bank',amount:'50000',asset:'USD',date:'2026-10-21',fileName:'synthetic.pdf',notes}),id:'1',file:{name:'synthetic.pdf'},review:'reviewed',linked:true};
   const reopened=openCase(JSON.stringify(saveCase(transaction,[evidence])));assert.equal(reopened.evidence[0].notes,notes);assert.equal(reopened.evidence[0].review,'unreviewed');assert.equal(reopened.evidence[0].linked,false);assert.equal(reopened.evidence[0].originalRequired,true);assert.equal(reopened.evidence[0].file,undefined);
   const r=report(transaction,[evidence]);assert.equal(r.evidence[0].notes,notes);assert.equal(r.evidence[0].file,undefined);assert.ok(reportBlocks(r).some(b=>b.text.includes(notes)));
+});
+test('mixed text-header/scanned-body pages trigger OCR even when header text exceeds 35 characters',()=>{
+  assert.equal(needsOCR('SYNTHETIC SCANNED STATEMENT - readable digital header, scanned body below\nGenerated on 2026-10-28. No real account, funds or identity.'),true);
+  assert.equal(needsOCR('Transaction date: 2026-10-23\nAmount received: INR 1,250.75'),false);
+  assert.equal(needsOCR('Date 2026-10-23\nAmount USD \uFFFD\uFFFD\uFFFD100.00'),true);
+});
+test('missing browser MIME and JPEG aliases use supported file extensions without accepting active content',()=>{
+  assert.equal(attachmentType({name:'statement.PDF',type:''}),'application/pdf');assert.equal(attachmentType({name:'receipt.jpeg',type:'application/octet-stream'}),'image/jpeg');assert.equal(attachmentType({type:'image/jpg'}),'image/jpeg');assert.equal(attachmentType({name:'unsafe.pdf',type:'text/html'}),'');
+  assert.doesNotThrow(()=>validateRead({name:'statement.pdf',type:'',size:100},1,3));
+});
+test('statement table rows, attached currency codes and explicit two-digit centuries are parsed',()=>{
+  const result=suggestFields(page('Currency: INR\nDate Description Debit Credit Balance\n21/10/2026 receipt 1,250.75 10,000.00\n22/10/2026 transfer 50 000.00 60,000.00\nAmount: 0.001BTC'));
+  assert.ok(result.amounts.some(a=>a.value==='1250.75'&&a.asset==='INR'));
+  assert.ok(result.amounts.some(a=>a.value==='50000'));
+  assert.ok(result.amounts.some(a=>a.value==='0.001'&&a.asset==='BTC'));
+  assert.deepEqual(dateValues('23/10/26','dmy','2000'),['2026-10-23']);
+  assert.equal(suggestFields(page('Date 23/10/26')).dates.length,0);
+  assert.equal(suggestFields(page('Date 23/10/26'),{century:'2000'}).dates[0].value,'2026-10-23');
+});
+test('hash/reference extraction preserves source and never interprets identifiers as money',()=>{
+  const txid='0x'+'a'.repeat(64);const result=suggestFields(page('Transaction hash: '+txid+'\nUTR: ABCD-12345678\nReference: PAY987654\nAmount USD 500.25'));
+  assert.equal(result.txids[0].value,txid);assert.equal(result.references[0].value,'ABCD-12345678');assert.equal(result.references[1].value,'PAY987654');assert.deepEqual(result.amounts.map(a=>a.value),['500.25']);
+  assert.equal(suggestFields(page('UTR:ABCD123456')).references[0].value,'ABCD123456');
+});
+test('split PDF glyphs rejoin digits and distant table columns stay separated',()=>{
+  const items=[{str:'1',width:5,transform:[1,0,0,10,10,100]},{str:'2',width:5,transform:[1,0,0,10,15,100]},{str:'50.00',width:25,transform:[1,0,0,10,100,100]}];assert.equal(textLines(items),'12\t50.00');
 });

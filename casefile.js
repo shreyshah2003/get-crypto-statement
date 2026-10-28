@@ -55,7 +55,8 @@ export function cleanTransaction(t) {
 
 export function cleanEvidence(e) {
   if (!e || !roles.includes(e.role)) throw Error('Invalid evidence role.');
-  const result = Object.fromEntries(['label','role','amount','asset','date','txid','notes','fileName','provenance','linkReason'].map(k => [k, text(e[k])]));
+  const result = Object.fromEntries(['label','role','amount','asset','date','txid','reference','notes','fileName','provenance','linkReason'].map(k => [k, text(e[k])]));
+  if(result.reference.length>160)throw Error('Reference exceeds 160 characters.');
   if (!result.label.trim() || result.label.length > 160) throw Error('Evidence needs a label (up to 160 characters).');
   if (result.amount) canonicalAmount(result.amount);
   if (result.asset && !/^[A-Z0-9]{2,12}$/.test(result.asset)) throw Error('Invalid evidence asset.');

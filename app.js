@@ -5,6 +5,8 @@ import {fetchBTC,btcEvidence,btcAmount} from './btc.js';
 import {createReportPDF} from './pdf.js';
 import {fetchEVM,evmEvidence} from './evm.js';
 import {attachmentReader} from './reader-ui.js';
+import {attachmentType} from './document-reader.js';
+import {mapEvidence} from './evidence-map.js';
 
 let transaction = null, evidence = [], editingId = null;
 let transactionDirty = false, evidenceDirty = false;
@@ -12,8 +14,8 @@ let pendingBTC=null, lookupGeneration=0;
 let pendingEVM=null,evmGeneration=0;
 const $ = id => document.getElementById(id);
 const form = $('case-form'), evidenceForm = $('evidence-form');
-const fields = ['label','role','amount','asset','date','txid','notes'];
-const reader=attachmentReader({form:evidenceForm,getExistingFile:()=>evidence.find(e=>e.id===editingId)?.file,getTarget:()=>({amount:form.elements.amount.value.trim(),asset:form.elements.asset.value.trim().toUpperCase(),date:form.elements.date.value}),onDirty:()=>{evidenceDirty=true;}});
+const fields = ['label','role','amount','asset','date','txid','reference','notes'];
+const reader=attachmentReader({form:evidenceForm,getExistingFile:()=>evidence.find(e=>e.id===editingId)?.file,getTarget:()=>({amount:form.elements.amount.value.trim(),asset:form.elements.asset.value.trim().toUpperCase(),date:form.elements.date.value,txid:form.elements.txid.value.trim()}),onDirty:()=>{evidenceDirty=true;}});
 function el(tag, text, cls) {
   const n = document.createElement(tag);
   if (text !== undefined) n.textContent = text;
@@ -111,7 +113,9 @@ function edit(e) {
 evidenceForm.onsubmit = event => {
   event.preventDefault();
   try {
-    const raw = data(evidenceForm), file = raw.attachment;
+    const raw = data(evidenceForm), selectedFile = raw.attachment;
+    const type=selectedFile.size?attachmentType(selectedFile):'';
+    const file=selectedFile.size&&type&&type!==selectedFile.type?new File([selectedFile],selectedFile.name,{type,lastModified:selectedFile.lastModified}):selectedFile;
     if(reader.isBusy())throw Error('Wait for attachment reading to finish or cancel it before saving evidence.');
     const old = evidence.find(e => e.id === editingId);
     if (!old && evidence.length >= 5000) throw Error('Limit a case to 5,000 evidence records.');
@@ -142,9 +146,11 @@ function render() {
   $('records').replaceChildren();
   for (const e of evidence) {
     const box = el('div', undefined, 'record');
+    box.id='evidence-'+e.id;box.tabIndex=-1;
     box.append(el('h3',e.label), el('p',`${e.role} · ${e.provenance} · ${e.review} · ${e.linked?'Linked':'Unlinked'}`), el('p',`${e.date || 'Date missing'} · ${e.amount || 'Amount missing'} ${e.asset || ''}`));
     if (e.notes) box.append(el('p',e.notes));
     if (e.txid) box.append(el('p',e.txid));
+    if(e.reference)box.append(el('p','Reference / UTR: '+e.reference));
     if (e.blockchain) appendSnapshot(box,e.blockchain,e.selectedOutput);
     if(e.evm)appendEVMSnapshot(box,e.evm,e.selectedTransfer);
     if (e.originalRequired) box.append(el('p',`Original missing: ${e.fileName}. Edit this record to reattach before review.`, 'warning'));
@@ -173,7 +179,19 @@ function render() {
     });
     $('records').append(box);
   }
-  preview();
+  renderEvidenceMap();preview();
+}
+function renderEvidenceMap(){
+  const target=$('evidence-map'),mapping=mapEvidence(evidence);target.replaceChildren(el('h3','Compare across your evidence'),el('p',mapping.limitations));
+  target.append(el('p',`${mapping.recordsConsidered} records considered. Suggestions do not link records or close checklist gaps. Review the originals, then use each record’s Link to transaction action with an explanation.`));
+  for(const warning of mapping.warnings)target.append(el('p',warning,'warning'));
+  if(!mapping.comparisons.length)target.append(el('p','No shared identifiers or exact amount/date comparisons found yet. Add references, hashes and source-backed values to compare records.'));
+  for(const pair of mapping.comparisons){
+    const box=el('div',undefined,'record');box.append(el('h4',`${pair.leftLabel} ↔ ${pair.rightLabel}`),el('p',`${pair.state} · ${pair.leftFile||'manual/provider record'} ↔ ${pair.rightFile||'manual/provider record'}`),el('p',pair.reasons.join('; ')));
+    for(const caution of pair.cautions)box.append(el('p',caution));
+    for(const [id,label]of [[pair.leftId,'Show first record'],[pair.rightId,'Show second record']])action(box,label,()=>{const record=$('evidence-'+id);record?.scrollIntoView({block:'center'});record?.focus();});
+    target.append(box);
+  }
 }
 function preview() {
   if (!transaction) { $('gaps').replaceChildren(); $('report-preview').replaceChildren(el('p','Save a transaction to prepare your report.')); return; }
@@ -184,9 +202,11 @@ function preview() {
   target.append(el('h3','Evidence and unresolved gaps'));
   for (const c of r.checklist) target.append(el('p',`${c.role}: ${c.complete?'Reviewed evidence manually linked':'Evidence missing'}${c.complete?' · '+c.evidenceIds.join(', '):''}`));
   target.append(el('h3','Evidence timeline — user supplied'));
+  target.append(el('p',`${r.evidenceMap.comparisons.length} cross-evidence comparisons are listed in the evidence section and report JSON. They remain suggestions only.`));
   for (const e of [...r.evidence].sort((a,b) => (a.date || '9999').localeCompare(b.date || '9999'))) {
     target.append(el('h4',e.label), el('p',`ID: ${e.id} · ${e.role} · ${e.review} · ${e.linked?'Linked':'Unlinked'} · ${e.provenance}`), el('p',`${e.amount || 'No amount'} ${e.asset || ''} · ${e.date || 'No date'}`), el('p',e.notes || 'No notes'), el('p',e.linkReason || 'No link rationale'), el('p',e.match.reasons.join('; ')));
     if (e.txid) target.append(el('p',`Transaction ID: ${e.txid}`));
+    if(e.reference)target.append(el('p','Reference / UTR: '+e.reference));
     if (e.blockchain) appendSnapshot(target,e.blockchain,e.selectedOutput);
     if(e.evm)appendEVMSnapshot(target,e.evm,e.selectedTransfer);
     if (e.fileName) target.append(el('p',`Source file: ${e.fileName}${e.originalRequired?' — original missing':' — original bytes not included in report'}`));

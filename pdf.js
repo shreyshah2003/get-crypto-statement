@@ -7,12 +7,14 @@ export function reportBlocks(r) {
   add(r.transaction.narrative || 'Source narrative missing.');
   add('Limitations',true);for(const line of r.limitations)add(line);
   add('Evidence gaps',true);for(const c of r.checklist)add(`${c.role}: ${c.complete?'reviewed evidence manually linked ('+c.evidenceIds.join(', ')+')':'missing evidence'}`);
+  if(r.evidenceMap){add('Cross-evidence comparisons - suggestions only',true);add(r.evidenceMap.limitations);for(const warning of r.evidenceMap.warnings)add(warning);for(const pair of r.evidenceMap.comparisons){add(`${pair.leftId} ↔ ${pair.rightId}: ${pair.state}`);add([...pair.reasons,...pair.cautions].join('; '));}}
   add('Evidence timeline - user supplied / provider reported',true);
   for(const e of [...r.evidence].sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'))){
     add(e.label,true,true);add(`ID ${e.id} | ${e.role} | ${e.review} | ${e.linked?'linked':'unlinked'}`);
     add(`${e.amount || 'No amount'} ${e.asset || ''} | ${e.date || 'No date'} | ${e.provenance}`);
     add(e.notes || 'No notes.');add(`Link explanation: ${e.linkReason || 'None.'}`);
     if(e.txid)add(`Transaction ID: ${e.txid}`);
+    if(e.reference)add(`Reference / UTR: ${e.reference}`);
     if(e.fileName)add(`Source file: ${e.fileName} (${e.originalRequired?'original missing':'original bytes excluded'})`);
     add(`Matching: ${e.match.reasons.join('; ')}`);
     if(e.blockchain){

@@ -1,7 +1,7 @@
 import http from 'node:http';
 import {readFile,readdir} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
-const allowed=Object.fromEntries(['index.html','app.js','core.js','casefile.js','demo.js','btc.js','evm.js','amount.js','pdf.js','pdf-container.js','document-fields.js','document-reader.js','reader-ui.js','style.css'].map(name=>[name==='index.html'?'/':'/'+name,name]));
+const allowed=Object.fromEntries(['index.html','app.js','core.js','evidence-map.js','casefile.js','demo.js','btc.js','evm.js','amount.js','pdf.js','pdf-container.js','document-fields.js','document-reader.js','reader-ui.js','style.css'].map(name=>[name==='index.html'?'/':'/'+name,name]));
 const vendor={
   '/vendor/pdfjs/pdf.mjs':'node_modules/pdfjs-dist/build/pdf.mjs',
   '/vendor/pdfjs/pdf.worker.mjs':'node_modules/pdfjs-dist/build/pdf.worker.mjs',

@@ -1,10 +1,20 @@
-# MVP validation — updated 23 October 2026
+# MVP validation — updated 28 October 2026
 
 ## Automated
 
-Hosting preparation: `npm run build` packaged 222 explicitly selected app/PDF/OCR assets. `npm run check:build` verified all asset sizes and SHA-256 hashes, same-origin worker/model paths, generated HTML policy, and absence of unexpected/private/source files. This verifies packaging; hosted preview/production checks must still run against the target Lovable project.
+## File-reading regression and cross-evidence comparison — 28 October 2026
 
-`npm test`: 44 tests pass. Coverage includes exact decimals; quoted/BOM/multiline CSV; bad dates, duplicate headers and precision limits; BTC/EVM hashes; precise BTC/EVM structures; cross-asset/amount/date/hash exclusions; role gaps; report omission of originals; save/reopen metadata round trips; imported trust reset; original reattachment requirements; hostile text as data; unsupported and oversized case files. Reader tests cover explicit decimal formats, Indian grouping, date ambiguity, source page/line and actual OCR scores, no target-derived invented values, ID/date exclusions, bounds, already-aborted reads and source notes surviving exports/import trust reset. `npm run check` passes for every app module.
+The published reader was reproduced missing the scanned body of a PDF with a readable digital header: it returned the header's generated-on date but zero amounts. With automatic OCR fallback, the same labelled fabricated fixture returned the actual scanned 1250.75 INR transaction amount, separate 10 INR fee, 2026-10-23 transaction date, header date and source UTR. These remained separate explicit choices with PDF/OCR page/line provenance; no target value was invented. File selection automatically started reading, and saving selected fields left evidence unreviewed/unlinked.
+
+A separate fabricated CSV record with the same UTR/amount/date produced a cross-file comparison naming both files and marked review required. After both records were reviewed, it remained candidate only and checklist gaps stayed open. Editing the reference produced conflicting fields and reset review. Reference preservation through save/reopen, weak amount/date matches, duplicate cautions, identifier conflicts, bounded repeated groups and report mapping are covered by tests. Missing MIME aliases, table rows, adjacent currency codes, explicit two-digit centuries and split PDF glyphs have regression coverage.
+
+The reader now distinguishes page OCR failures, no readable text and readable text without supported fields. Corrected or pasted source text is labelled Manual transcript. A page's OCR failure keeps other readable pages; these diagnostics improve recoverability without asserting that every possible document layout will extract correctly. The test documents contain no real funds, identities or customer data.
+
+## Automated suite
+
+Hosting preparation: `npm run build` packaged 223 explicitly selected app/PDF/OCR assets. `npm run check:build` verified all asset sizes and SHA-256 hashes, same-origin worker/model paths, generated HTML policy, and absence of unexpected/private/source files. This verifies packaging; hosted preview/production checks must still run against the target Lovable project.
+
+`npm test`: 54 tests pass. Coverage includes exact decimals; quoted/BOM/multiline CSV; bad dates, duplicate headers and precision limits; BTC/EVM hashes; precise BTC/EVM structures; cross-asset/amount/date/hash exclusions; role gaps; report omission of originals; save/reopen metadata round trips; imported trust reset; original reattachment requirements; hostile text as data; unsupported and oversized case files. Reader tests cover explicit decimal formats, Indian grouping, date ambiguity, source page/line and actual OCR scores, no target-derived invented values, ID/date exclusions, bounds, already-aborted reads and source notes surviving exports/import trust reset. `npm run check` passes for every app module.
 
 ## Local PDF/OCR reader — 23 October 2026
 
@@ -20,7 +30,7 @@ PDF text, OCR and form-field extraction run in browser workers/canvas using same
 
 Live local HTTP checks confirmed seven required reader asset routes/MIME types, denied package.json, arbitrary node_modules/source/private-file routes, and rejected POST with 405. `npm audit --omit=dev` reported zero known vulnerabilities on 23 October 2026; this is not an independent security assessment. Final browser smoke check after cancellation changes successfully cancelled/retried scanned-PDF OCR, retained the same 1250.75 INR / 2026-10-23 suggestions and correctly labelled agreement with the entered transaction.
 
-These fixtures establish basic behavior, not general OCR accuracy on customer statements. English printed text, limited page ranges and explicit date/number formats are supported. Complex tables, handwriting, rotated/degraded scans, non-English scripts, inaccessible fonts and XFA may need manual transcription. A page with incomplete text needs the explicit all-pages OCR option. Cross-browser and independent security/accessibility assessments remain outstanding. The older original-blob and optional native-print gates below remain manual; they are separate from extraction.
+These fixtures establish basic behavior, not general OCR accuracy on customer statements. English printed text, limited page ranges and explicit date/number formats are supported. Complex tables, handwriting, rotated/degraded scans, non-English scripts, inaccessible fonts and XFA may need manual transcription. Pages without supported amount/date fields now trigger automatic OCR; the explicit all-pages OCR option can also re-read pages whose digital text hides other scanned content. Cross-browser and independent security/accessibility assessments remain outstanding. The older original-blob and optional native-print gates below remain manual; they are separate from extraction.
 
 ## Browser checks with fictional data
 

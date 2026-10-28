@@ -8,7 +8,7 @@ const root=resolve(dirname(fileURLToPath(import.meta.url)),'..'),out=resolve(roo
 if(dirname(out)!==root||relative(root,out)!=='dist')throw Error('Unsafe build output directory.');
 try{if((await lstat(out)).isSymbolicLink())throw Error('Build output must not be a symbolic link.');}catch(e){if(e.code!=='ENOENT')throw e;}
 await rm(out,{recursive:true,force:true});await mkdir(out,{recursive:true});
-const appFiles=['index.html','app.js','core.js','casefile.js','demo.js','btc.js','evm.js','amount.js','pdf.js','pdf-container.js','document-fields.js','document-reader.js','reader-ui.js','style.css'];
+const appFiles=['index.html','app.js','core.js','evidence-map.js','casefile.js','demo.js','btc.js','evm.js','amount.js','pdf.js','pdf-container.js','document-fields.js','document-reader.js','reader-ui.js','style.css'];
 const copies=appFiles.map(name=>[name,name]);
 copies.push(
  ['node_modules/pdfjs-dist/build/pdf.mjs','vendor/pdfjs/pdf.mjs'],
